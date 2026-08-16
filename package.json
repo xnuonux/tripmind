@@ -1,0 +1,9 @@
+{
+  "name": "tripmind",
+  "version": "1.0.0",
+  "private": false,
+  "description": "TRIPMIND — a chamber for watching mathematics become visible",
+  "type": "module",
+  "license": "MIT",
+  "author": "xnuonux"
+}

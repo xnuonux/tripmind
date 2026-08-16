@@ -1,0 +1,3808 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#000000"/>
+<title>Expansion study</title>
+
+<style>
+  :root{
+    --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    --serif: 'EB Garamond', 'Iowan Old Style', Georgia, serif;
+    --ink: rgba(235, 230, 220, 0.85);
+    --ink-dim: rgba(235, 230, 220, 0.38);
+    --panel: rgba(12, 10, 14, 0.72);
+    --edge: rgba(235, 230, 220, 0.08);
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{
+    margin:0; padding:0; overflow:hidden;
+    background:#000; color:var(--ink);
+    font-family:var(--mono);
+    width:100%; height:100%;
+    font-size:12px; letter-spacing:0.01em;
+  }
+
+  #stage{
+    position:fixed; inset:0;
+    width:100%; height:100%;
+    touch-action:none;
+  }
+  #stage canvas{ display:block; }
+
+  .hud{
+    position:fixed; z-index:10;
+    pointer-events:none;
+    font-family:var(--mono);
+    font-size:10px;
+    color:var(--ink-dim);
+    letter-spacing:0.08em;
+    text-transform:lowercase;
+    user-select:none;
+  }
+  .hud-br{ right:14px; bottom:12px; font-style:italic; }
+  .hud-bl{ left:14px; bottom:12px; }
+  .hud-tl{ left:14px; top:12px; font-size:9px; line-height:1.5; }
+
+  #menu-toggle{
+    position:fixed; z-index:20;
+    top:10px; right:10px;
+    width:34px; height:34px;
+    background:var(--panel);
+    border:1px solid var(--edge);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    color:var(--ink);
+    font-family:var(--mono);
+    font-size:16px; line-height:32px; text-align:center;
+    cursor:pointer;
+    border-radius:2px;
+  }
+
+  #panel{
+    position:fixed; z-index:15;
+    top:0; right:0; height:100%;
+    width:min(300px, 86vw);
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border-left:1px solid var(--edge);
+    padding:52px 18px 22px;
+    overflow-y:auto;
+    transform:translateX(100%);
+    transition:transform 0.32s cubic-bezier(.4,0,.2,1);
+    font-size:11px;
+  }
+  #panel.open{ transform:translateX(0); }
+
+  #panel h2{
+    margin:0 0 2px;
+    font-family:var(--serif);
+    font-style:italic;
+    font-weight:400;
+    font-size:22px;
+    color:var(--ink);
+    letter-spacing:-0.01em;
+  }
+  #panel .subtitle{
+    color:var(--ink-dim);
+    font-size:10px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    margin-bottom:22px;
+  }
+
+  .group{
+    margin-bottom:18px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--edge);
+  }
+  .group:last-child{ border-bottom:none; }
+  .group-title{
+    font-size:9px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin-bottom:10px;
+  }
+
+  .row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:6px 0;
+    gap:10px;
+  }
+  .row label{
+    flex:1;
+    font-size:11px;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .row .val{
+    color:var(--ink-dim);
+    font-variant-numeric:tabular-nums;
+    min-width:40px; text-align:right;
+  }
+
+  input[type=checkbox]{
+    appearance:none; -webkit-appearance:none;
+    width:28px; height:16px;
+    background:rgba(235,230,220,0.08);
+    border:1px solid var(--edge);
+    position:relative; cursor:pointer;
+    border-radius:1px;
+    flex: 0 0 auto;
+  }
+  input[type=checkbox]:checked{ background:rgba(235,230,220,0.55); }
+  input[type=checkbox]::before{
+    content:''; position:absolute;
+    width:10px; height:10px;
+    top:2px; left:2px;
+    background:#000;
+    transition:transform 0.16s;
+  }
+  input[type=checkbox]:checked::before{ transform:translateX(12px); background:#111; }
+
+  input[type=range]{
+    -webkit-appearance:none; appearance:none;
+    flex:1.4;
+    background:transparent;
+    height:16px;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:1px; background:var(--edge);
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:10px; height:10px;
+    background:var(--ink);
+    margin-top:-5px;
+    border-radius:0;
+    cursor:pointer;
+  }
+  input[type=range]::-moz-range-track{ height:1px; background:var(--edge); }
+  input[type=range]::-moz-range-thumb{ width:10px; height:10px; background:var(--ink); border:0; border-radius:0; cursor:pointer; }
+
+  select, input[type=text]{
+    flex:1;
+    background:transparent;
+    border:1px solid var(--edge);
+    color:var(--ink);
+    font-family:var(--mono);
+    font-size:11px;
+    padding:5px 7px;
+    border-radius:1px;
+    outline:none;
+  }
+  select:focus, input[type=text]:focus{ border-color:rgba(235,230,220,0.3); }
+
+  button.act{
+    width:100%;
+    background:transparent;
+    border:1px solid var(--edge);
+    color:var(--ink);
+    font-family:var(--mono);
+    font-size:11px;
+    padding:8px;
+    margin-top:4px;
+    cursor:pointer;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+  button.act:hover, button.act:active{ background:rgba(235,230,220,0.06); }
+  button.prim{
+    background:rgba(235,230,220,0.08);
+    border-color:rgba(235,230,220,0.2);
+  }
+
+  .tip{
+    font-size:10px;
+    color:var(--ink-dim);
+    line-height:1.5;
+    margin-top:6px;
+    font-style:italic;
+    font-family:var(--serif);
+  }
+
+  @media (max-width:480px){
+    .hud-tl{ display:none; }
+  }
+
+  /* Recording overlay */
+  #rec-overlay{
+    position:fixed; inset:0; z-index:100;
+    background:rgba(0,0,0,0.75);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    display:none;
+    align-items:center; justify-content:center;
+  }
+  #rec-overlay.show{ display:flex; }
+  .rec-inner{
+    width:min(420px, 92vw);
+    padding:36px 32px 28px;
+    background:rgba(16, 13, 18, 0.92);
+    border:1px solid var(--edge);
+    border-radius:2px;
+    text-align:center;
+  }
+  .rec-label{
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:28px;
+    color:var(--ink);
+    letter-spacing:-0.01em;
+    margin-bottom:4px;
+  }
+  .rec-label::before{
+    content:'● ';
+    color:#e74c3c;
+    animation:blink 1.3s infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0.3; } }
+  .rec-progress{
+    height:2px;
+    background:var(--edge);
+    margin:22px 0 14px;
+    overflow:hidden;
+  }
+  .rec-bar{
+    height:100%;
+    background:var(--ink);
+    width:0%;
+    transition:width 0.12s linear;
+  }
+  .rec-stats{
+    display:flex;
+    justify-content:space-between;
+    font-family:var(--mono);
+    font-size:10px;
+    color:var(--ink-dim);
+    letter-spacing:0.06em;
+    margin-bottom:18px;
+  }
+  .rec-phase{
+    font-family:var(--mono);
+    font-size:10px;
+    color:var(--ink-dim);
+    text-transform:lowercase;
+    letter-spacing:0.1em;
+    margin-bottom:22px;
+    min-height:14px;
+  }
+  #rec-cancel{
+    background:transparent;
+    border:1px solid var(--edge);
+    color:var(--ink-dim);
+    font-family:var(--mono);
+    font-size:11px;
+    padding:8px 24px;
+    cursor:pointer;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+  #rec-cancel:hover{ color:var(--ink); border-color:rgba(235,230,220,0.3); }
+</style>
+</head>
+<body>
+
+<div id="stage"></div>
+
+<!-- Recording overlay -->
+<div id="rec-overlay">
+  <div class="rec-inner">
+    <div class="rec-label">recording</div>
+    <div class="rec-progress">
+      <div class="rec-bar" id="rec-bar"></div>
+    </div>
+    <div class="rec-stats">
+      <span id="rec-pct">0%</span>
+      <span id="rec-frame">frame 0 / 0</span>
+      <span id="rec-eta">eta –</span>
+    </div>
+    <div class="rec-phase" id="rec-phase">preparing</div>
+    <button id="rec-cancel">cancel</button>
+  </div>
+</div>
+
+<div class="hud hud-tl" id="hud-title"></div>
+<div class="hud hud-bl">@your_handle</div>
+<div class="hud hud-br" id="hud-id">Expansion study [00000000] (2026)</div>
+
+<div id="menu-toggle" title="controls">≡</div>
+
+<div id="panel">
+  <h2>Expansion study</h2>
+  <div class="subtitle">— generator v1 —</div>
+
+  <div class="group">
+    <div class="group-title">Seed</div>
+    <div class="row">
+      <input type="text" id="seed" value="d0786211" maxlength="8" spellcheck="false"/>
+      <button class="act" style="flex:0 0 auto; width:auto; padding:5px 10px; margin:0" id="rand">🎲</button>
+    </div>
+    <div class="tip">8-char hex. Same seed → same output.</div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Saved looks ★</div>
+    <div class="row">
+      <select id="look-list" style="flex:1">
+        <option value="">— select a saved look —</option>
+      </select>
+    </div>
+    <div class="row" style="gap:4px">
+      <button class="act" id="look-load" style="flex:1">load</button>
+      <button class="act" id="look-save" style="flex:1">★ save current</button>
+    </div>
+    <div class="row" style="gap:4px">
+      <button class="act" id="look-rename" style="flex:1">rename</button>
+      <button class="act" id="look-delete" style="flex:1; color:#ff8080">delete</button>
+    </div>
+    <div class="row">
+      <button class="act" id="cam-recenter" style="flex:1">⊙ recenter camera</button>
+    </div>
+    <div class="tip">Captures the seed plus EVERY setting (mode, sliders, multi-shape, automorphic, morph, etc). Press <b>B</b> anywhere to quick-save the current look. <b>Recenter camera</b> snaps the view back to the default framing — use before recording if the scene looks cut off.</div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Mode</div>
+    <div class="row">
+      <label>Personality</label>
+      <select id="mode">
+        <optgroup label="Classic modes">
+          <option value="classic">classic</option>
+          <option value="orbital">orbital</option>
+          <option value="fluid">fluid</option>
+          <option value="plasma">plasma</option>
+          <option value="galaxy">galaxy</option>
+          <option value="filament">filament</option>
+          <option value="nebula">nebula</option>
+          <option value="vortex">vortex</option>
+        </optgroup>
+        <optgroup label="Parametric (infinite shape space)">
+          <option value="continuum">continuum (superformula)</option>
+          <option value="celtic">celtic (torus knots)</option>
+          <option value="chladni">chladni (Lissajous)</option>
+          <option value="orbital_qm">orbital_qm (atomic Y)</option>
+          <option value="chaos">chaos (attractors)</option>
+        </optgroup>
+        <option value="random" selected>✨ random</option>
+      </select>
+    </div>
+    <div class="tip">Modes are full personalities — each one rolls its own physics, shape, and motion character. "Random" picks a new mode every time you change the seed.</div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Form</div>
+    <div class="row">
+      <label>Shape</label>
+      <select id="shape">
+        <optgroup label="Parametric families (infinite)">
+          <option value="superformula">superformula (∞ variants)</option>
+          <option value="torusknot">torus knot (p,q)</option>
+          <option value="lissajous">Lissajous 3D</option>
+          <option value="sphericalharmonic">spherical harmonic Y[l,m]</option>
+          <option value="attractor">strange attractor</option>
+        </optgroup>
+        <optgroup label="Classic shapes">
+          <option value="torus">torus</option>
+          <option value="sphere">sphere</option>
+          <option value="rings">rings</option>
+          <option value="knot">trefoil knot</option>
+          <option value="disc">disc</option>
+          <option value="cloud">cloud</option>
+          <option value="helix">double helix</option>
+          <option value="cube">cube</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="row">
+      <label>Particles</label>
+      <input type="range" id="count" min="0" max="6" step="1" value="3"/>
+      <span class="val" id="count-v">65k</span>
+    </div>
+    <div class="row">
+      <label>Noise scale</label>
+      <input type="range" id="noise" min="0" max="100" step="1" value="35"/>
+      <span class="val" id="noise-v">.35</span>
+    </div>
+    <div class="row">
+      <label>Motion speed</label>
+      <input type="range" id="speed" min="0" max="200" step="1" value="60"/>
+      <span class="val" id="speed-v">.60</span>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Morph (loop mode)</div>
+    <div class="row"><label for="m-on">Enabled</label><input type="checkbox" id="m-on"></div>
+    <div class="row">
+      <label>Hold</label>
+      <input type="range" id="m-hold" min="5" max="80" step="1" value="25"/>
+      <span class="val" id="m-hold-v">2.5s</span>
+    </div>
+    <div class="row">
+      <label>Transition</label>
+      <input type="range" id="m-trans" min="5" max="80" step="1" value="30"/>
+      <span class="val" id="m-trans-v">3.0s</span>
+    </div>
+    <div class="row">
+      <label>Sequence</label>
+      <select id="m-seq">
+        <option value="random">random</option>
+        <option value="cycle">cycle all</option>
+        <option value="shuffle">shuffle</option>
+      </select>
+    </div>
+    <button class="act" id="m-force" style="margin-top:4px">force next shape</button>
+    <div class="tip">Particles re-organize into new shapes forever. Hold = time frozen in each shape. Transition = morph time between shapes. The HAL09999 signature motion.</div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Multi-shape composition</div>
+    <div class="row"><label for="multi-on">Enabled</label><input type="checkbox" id="multi-on"></div>
+    <div class="row">
+      <label>Shape count</label>
+      <input type="range" id="multi-n" min="2" max="4" step="1" value="2"/>
+      <span class="val" id="multi-n-v">2</span>
+    </div>
+    <div class="tip">Splits particles into N groups, each holding a DIFFERENT shape simultaneously. A sphere surrounded by rings surrounded by a knot — all visible at once, all morphing independently. HAL's layered compositions.</div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Automorphic continuum</div>
+    <div class="row"><label for="auto-on">Enabled</label><input type="checkbox" id="auto-on"></div>
+    <div class="row">
+      <label>Drift speed</label>
+      <input type="range" id="auto-speed" min="10" max="100" step="1" value="25"/>
+      <span class="val" id="auto-speed-v">.40</span>
+    </div>
+    <div class="tip">During HOLD, shape parameters slowly drift through the family's space. A superformula with m=7 morphs continuously to m=8, then m=6.3, etc. The shape is "breathing through itself" — never the same twice. Only works for parametric families (superformula/knot/Lissajous/Y[l,m]).</div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Physics</div>
+    <div class="row">
+      <label>Spring</label>
+      <input type="range" id="spring" min="0" max="300" step="1" value="120"/>
+      <span class="val" id="spring-v">1.20</span>
+    </div>
+    <div class="row">
+      <label>Damping</label>
+      <input type="range" id="damping" min="50" max="100" step="1" value="94"/>
+      <span class="val" id="damping-v">.94</span>
+    </div>
+    <div class="row">
+      <label>Orbit</label>
+      <input type="range" id="orbit" min="0" max="200" step="1" value="15"/>
+      <span class="val" id="orbit-v">.15</span>
+    </div>
+    <div class="row">
+      <label>Brightness</label>
+      <input type="range" id="bright" min="10" max="200" step="1" value="100"/>
+      <span class="val" id="bright-v">1.00</span>
+    </div>
+    <div class="row">
+      <label>Group sync</label>
+      <input type="range" id="gsync" min="0" max="100" step="1" value="70"/>
+      <span class="val" id="gsync-v">.70</span>
+    </div>
+    <div class="row">
+      <label>Containment</label>
+      <input type="range" id="contain" min="0" max="400" step="1" value="180"/>
+      <span class="val" id="contain-v">1.80</span>
+    </div>
+    <div class="row">
+      <label>Crispness</label>
+      <input type="range" id="crisp" min="0" max="100" step="1" value="80"/>
+      <span class="val" id="crisp-v">.50</span>
+    </div>
+    <div class="tip">Spring = how tightly particles hold their shape. Damping = how much momentum they keep (near 1 = glide forever). Orbit = rotational pull. Brightness tames blown-out seeds. <b>Group sync = 0 makes each particle drift individually (cloud feel). 1 makes them all move together as one body (HAL "marching band" feel). Containment = invisible sphere that bounces particles back inward. Crispness = how hard particles CRYSTALLIZE into shape during hold — 0 lets them drift and breathe, 1 locks them in rigid.</b></div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Glassy shell</div>
+    <div class="row"><label for="s-on">Enabled</label><input type="checkbox" id="s-on"></div>
+    <div class="row">
+      <label>Form</label>
+      <select id="s-shape">
+        <option value="sphere">sphere</option>
+        <option value="dome">dome</option>
+        <option value="torus">torus</option>
+        <option value="icosahedron">icosahedron</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Distortion</label>
+      <input type="range" id="s-dist" min="0" max="100" step="1" value="40"/>
+      <span class="val" id="s-dist-v">.40</span>
+    </div>
+    <div class="row">
+      <label>Thickness</label>
+      <input type="range" id="s-thick" min="0" max="100" step="1" value="35"/>
+      <span class="val" id="s-thick-v">.35</span>
+    </div>
+    <div class="tip">The translucent dome you see around HAL's particle clouds. Refracts the scene behind it.</div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Audio reactive</div>
+    <div class="row"><label for="a-on">Enabled</label><input type="checkbox" id="a-on"></div>
+    <div class="row">
+      <label>Source</label>
+      <select id="a-src">
+        <option value="mic">microphone</option>
+        <option value="file">audio file</option>
+      </select>
+    </div>
+    <div class="row" id="a-file-row" style="display:none">
+      <input type="file" id="a-file" accept="audio/*" style="color:var(--ink-dim); font-size:10px"/>
+    </div>
+    <div class="row">
+      <label>Intensity</label>
+      <input type="range" id="a-amt" min="0" max="200" step="1" value="100"/>
+      <span class="val" id="a-amt-v">1.0</span>
+    </div>
+    <div class="tip">Bass pulses the particle cloud. Treble shimmers the shell. Mic needs permission.</div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Render layers</div>
+    <div class="row"><label for="l-trail">Feedback trails</label><input type="checkbox" id="l-trail" checked></div>
+    <div class="row"><label for="l-bloom">Bloom</label><input type="checkbox" id="l-bloom" checked></div>
+    <div class="row"><label for="l-ca">Chromatic aberration</label><input type="checkbox" id="l-ca" checked></div>
+    <div class="row"><label for="l-grain">Film grain</label><input type="checkbox" id="l-grain" checked></div>
+    <div class="row"><label for="l-rotate">Auto-rotate</label><input type="checkbox" id="l-rotate" checked></div>
+    <div class="tip">Toggle each layer to feel what it does. This is the HAL post-processing pipeline in miniature.</div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Record video — publication render</div>
+    <div class="row">
+      <label>Duration</label>
+      <input type="range" id="r-dur" min="3" max="30" step="1" value="12"/>
+      <span class="val" id="r-dur-v">12s</span>
+    </div>
+    <div class="row">
+      <label>Aspect</label>
+      <select id="r-aspect">
+        <option value="1:1" selected>1:1 square</option>
+        <option value="16:9">16:9 landscape</option>
+        <option value="9:16">9:16 vertical</option>
+        <option value="4:5">4:5 portrait (IG)</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Resolution</label>
+      <select id="r-size">
+        <option value="540">540p (draft, fast)</option>
+        <option value="720">720p</option>
+        <option value="1080" selected>1080p (HD)</option>
+        <option value="1440">1440p (2K)</option>
+        <option value="2160">2160p (4K)</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>FPS</label>
+      <select id="r-fps">
+        <option value="24">24 (cinematic)</option>
+        <option value="30">30</option>
+        <option value="60" selected>60 (smooth)</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Quality</label>
+      <select id="r-quality">
+        <option value="draft">draft (fastest)</option>
+        <option value="final" selected>final (crisp)</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Camera</label>
+      <select id="r-camera">
+        <option value="orbit" selected>slow orbit</option>
+        <option value="still">still (no movement)</option>
+        <option value="push">dolly push-in</option>
+        <option value="cinematic">cinematic arc</option>
+        <option value="sync">morph-sync choreography</option>
+      </select>
+    </div>
+    <button class="act prim" id="record-btn">● Render publication MP4</button>
+    <div class="tip">
+      <b>Draft</b> uses JPEG frames (fast, adequate for preview).
+      <b>Final</b> uses PNG frames (slower but lossless for mint-grade output).
+      <b>Morph-sync camera</b> syncs camera moves to the shape state machine — pushes in during hold, pulls back during break.
+      A 12s 1080p60 final render takes ~6–15 min on Iris Xe. 4K takes much longer — start with 1080p.
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Capture</div>
+    <button class="act prim" id="savepng">Save still (PNG)</button>
+    <div class="tip">Quick screenshot of the current frame.</div>
+  </div>
+
+  <div class="group">
+    <div class="group-title">Controls</div>
+    <div class="tip" style="font-style:normal; font-family:var(--mono); color:var(--ink)">
+      • drag — orbit<br>
+      • pinch / wheel — zoom<br>
+      • two-finger drag — pan
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { AfterimagePass } from 'three/addons/postprocessing/AfterimagePass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { GPUComputationRenderer } from 'three/addons/misc/GPUComputationRenderer.js';
+
+// ---------- deterministic RNG from a hex seed ----------
+function cyrb128(str){
+  let h1=1779033703,h2=3144134277,h3=1013904242,h4=2773480762;
+  for(let i=0,k;i<str.length;i++){
+    k=str.charCodeAt(i);
+    h1=h2^Math.imul(h1^k,597399067);
+    h2=h3^Math.imul(h2^k,2869860233);
+    h3=h4^Math.imul(h3^k,951274213);
+    h4=h1^Math.imul(h4^k,2716044179);
+  }
+  h1=Math.imul(h3^(h1>>>18),597399067);
+  h2=Math.imul(h4^(h2>>>22),2869860233);
+  h3=Math.imul(h1^(h3>>>17),951274213);
+  h4=Math.imul(h2^(h4>>>19),2716044179);
+  return [(h1^h2^h3^h4)>>>0,(h2^h1)>>>0,(h3^h1)>>>0,(h4^h1)>>>0];
+}
+function mulberry32(a){
+  return function(){
+    a|=0; a=a+0x6D2B79F5|0;
+    let t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  }
+}
+let rand;
+function seedFromHex(hex){
+  rand = mulberry32(cyrb128(hex)[0]);
+}
+
+// ---------- Iñigo Quilez cosine palettes ----------
+const PALETTES = [
+  {a:[0.5,0.5,0.5], b:[0.5,0.5,0.5], c:[1.0,1.0,0.5], d:[0.80,0.90,0.30]}, // gold/blue
+  {a:[0.5,0.5,0.5], b:[0.5,0.5,0.5], c:[2.0,1.0,0.0], d:[0.50,0.20,0.25]}, // red/purple
+  {a:[0.5,0.5,0.5], b:[0.5,0.5,0.5], c:[1.0,1.0,1.0], d:[0.00,0.10,0.20]}, // ice
+  {a:[0.8,0.5,0.4], b:[0.2,0.4,0.2], c:[2.0,1.0,1.0], d:[0.00,0.25,0.25]}, // ember
+  {a:[0.5,0.5,0.5], b:[0.5,0.5,0.5], c:[1.0,0.7,0.4], d:[0.00,0.15,0.20]}, // amber
+  {a:[0.6,0.5,0.5], b:[0.4,0.4,0.5], c:[1.0,1.0,2.0], d:[0.35,0.55,0.75]}, // cyan/magenta
+  {a:[0.5,0.5,0.5], b:[0.5,0.5,0.5], c:[2.0,1.0,1.0], d:[0.30,0.20,0.20]}, // candy red
+  {a:[0.5,0.5,0.5], b:[0.5,0.5,0.5], c:[1.0,1.0,0.0], d:[0.50,0.20,0.25]}, // sunset
+  {a:[0.9,0.5,0.3], b:[0.8,0.9,0.3], c:[0.3,0.3,0.5], d:[0.00,0.40,0.20]}, // lava
+  {a:[0.2,0.2,0.3], b:[0.7,0.7,0.8], c:[1.0,1.0,1.0], d:[0.00,0.33,0.67]}, // deep sea
+  {a:[0.5,0.5,0.8], b:[0.5,0.5,0.2], c:[2.0,1.0,0.5], d:[0.25,0.25,0.80]}, // aurora
+  {a:[0.4,0.2,0.1], b:[0.6,0.8,0.9], c:[1.0,0.8,0.6], d:[0.10,0.10,0.30]}, // nebula
+];
+
+// ---------- Modes — each mode is a "personality": full physics+form preset ----------
+// Each mode returns an object with the sim parameters.  "wobble" is an extra
+// mode-specific coefficient the velocity shader picks up (e.g. for rhythmic pulsing).
+const MODES = {
+  classic: {
+    shape: 'torus',
+    spring: 1.20, damping: 0.94, orbit: 0.15,
+    noise: 0.35, speed: 0.60, brightness: 1.00,
+    pointSize: 1.0, trail: 0.88, bloom: 1.4,
+    pulse: 0.0,
+  },
+  orbital: {
+    // Clean ring orbits — tight spring, strong rotation, low chaos
+    shape: 'rings',
+    spring: 2.0, damping: 0.97, orbit: 0.45,
+    noise: 0.18, speed: 0.40, brightness: 0.95,
+    pointSize: 0.9, trail: 0.90, bloom: 1.5,
+    pulse: 0.0,
+    gsync: 0.95, contain: 1.80,      // tight marching-band rings
+  },
+  fluid: {
+    // No home anchor — particles just drift on the curl field. Pure flow.
+    shape: 'cloud',
+    spring: 0.05, damping: 0.985, orbit: 0.02,
+    noise: 0.70, speed: 0.80, brightness: 0.75,
+    pointSize: 1.1, trail: 0.94, bloom: 1.2,
+    pulse: 0.0,
+    gsync: 0.40, contain: 2.40,      // looser stage, but still bounded
+  },
+  plasma: {
+    // Rhythmic pulsing — spring oscillates so particles breathe in and out
+    shape: 'sphere',
+    spring: 1.5, damping: 0.92, orbit: 0.30,
+    noise: 0.55, speed: 1.00, brightness: 1.10,
+    pointSize: 1.0, trail: 0.86, bloom: 1.8,
+    pulse: 0.7,                     // <-- distinctive: heavy pulse modulation
+    gsync: 0.75, contain: 2.00,
+  },
+  galaxy: {
+    // Flattened spiral disc with strong rotation — like a top-down spiral arm
+    shape: 'disc',
+    spring: 0.9, damping: 0.96, orbit: 0.55,
+    noise: 0.30, speed: 0.50, brightness: 0.90,
+    pointSize: 0.9, trail: 0.92, bloom: 1.6,
+    pulse: 0.0,
+    gsync: 0.90, contain: 2.20,      // disc rotates as one body
+  },
+  filament: {
+    // Whips long stringy streaks — very low damping, high noise, high speed
+    shape: 'knot',
+    spring: 0.35, damping: 0.990, orbit: 0.08,
+    noise: 0.90, speed: 1.20, brightness: 0.85,
+    pointSize: 0.8, trail: 0.95, bloom: 1.3,
+    pulse: 0.0,
+    gsync: 0.50, contain: 2.20,      // medium sync for streaks
+  },
+  nebula: {
+    // Huge slow cloud, soft particles, gentle currents
+    shape: 'cloud',
+    spring: 0.12, damping: 0.982, orbit: 0.04,
+    noise: 0.50, speed: 0.25, brightness: 0.80,
+    pointSize: 1.3, trail: 0.93, bloom: 1.4,
+    pulse: 0.0,
+    gsync: 0.30, contain: 2.50,      // wide soft stage
+  },
+  vortex: {
+    // Sphere with intense axial rotation — funnels into a vortex core
+    shape: 'sphere',
+    spring: 1.1, damping: 0.95, orbit: 0.80,
+    noise: 0.40, speed: 0.70, brightness: 1.05,
+    pointSize: 0.9, trail: 0.89, bloom: 1.6,
+    pulse: 0.0,
+    gsync: 0.85, contain: 1.90,
+  },
+  // ========== PARAMETRIC MODES ==========
+  // Each of these uses a parametric family as its native shape. Every
+  // seed rolls a fresh instance. Perfect for morph mode — the loop cycles
+  // through infinite mathematical variations.
+  continuum: {
+    // Sharp geometric flow through the superformula space. Crisp shapes
+    // holding still, then breaking into the next. The HAL-signature.
+    shape: 'superformula',
+    spring: 2.2, damping: 0.96, orbit: 0.12,
+    noise: 0.22, speed: 0.45, brightness: 0.90,
+    pointSize: 0.9, trail: 0.91, bloom: 1.4,
+    pulse: 0.0,
+    gsync: 0.90, contain: 2.00,
+  },
+  celtic: {
+    // Torus knots — every seed a different (p,q) braid
+    shape: 'torusknot',
+    spring: 1.8, damping: 0.97, orbit: 0.25,
+    noise: 0.18, speed: 0.50, brightness: 0.95,
+    pointSize: 0.9, trail: 0.90, bloom: 1.5,
+    pulse: 0.0,
+    gsync: 0.92, contain: 1.90,
+  },
+  chladni: {
+    // Lissajous standing waves — the "frequencial" vibe, Tesla territory
+    shape: 'lissajous',
+    spring: 1.6, damping: 0.97, orbit: 0.10,
+    noise: 0.25, speed: 0.55, brightness: 0.85,
+    pointSize: 0.8, trail: 0.93, bloom: 1.4,
+    pulse: 0.2,
+    gsync: 0.80, contain: 2.10,
+  },
+  orbital_qm: {
+    // Hydrogen atomic orbitals — real quantum shapes
+    shape: 'sphericalharmonic',
+    spring: 2.0, damping: 0.96, orbit: 0.08,
+    noise: 0.20, speed: 0.40, brightness: 0.90,
+    pointSize: 0.9, trail: 0.90, bloom: 1.5,
+    pulse: 0.0,
+    gsync: 0.88, contain: 2.00,
+  },
+  chaos: {
+    // Strange attractors — deterministic chaos made visible
+    shape: 'attractor',
+    spring: 0.45, damping: 0.988, orbit: 0.05,
+    noise: 0.32, speed: 0.60, brightness: 0.80,
+    pointSize: 0.85, trail: 0.95, bloom: 1.4,
+    pulse: 0.0,
+    gsync: 0.55, contain: 2.30,
+  },
+};
+const MODE_NAMES = Object.keys(MODES);
+
+function resolveMode(modeName){
+  if(modeName === 'random'){
+    // Pick a new mode deterministically from the seed's RNG stream
+    const pick = MODE_NAMES[1 + Math.floor(rand() * (MODE_NAMES.length - 1))];
+    return { name: pick, ...MODES[pick] };
+  }
+  return { name: modeName, ...(MODES[modeName] || MODES.classic) };
+}
+
+// ---------- three.js setup ----------
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({
+  antialias:false,
+  powerPreference:'high-performance',
+  alpha:false,
+  stencil:false,
+});
+renderer.setClearColor(0x000000, 1);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+// Default distance 6.5 gives ~60% vertical fill for a shape of radius 1.8
+// (containment size) — comfortable margin without being too wide.
+camera.position.set(0, 0, 6.5);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.rotateSpeed = 0.55;
+controls.zoomSpeed = 0.7;
+controls.panSpeed = 0.4;
+// minDistance MUST stay outside the containment sphere (1.8) + particle halo.
+// Otherwise the user can zoom inside the show with scroll wheel, and at that
+// point recording produces black frames because post-processing crushes the
+// inside-view signal. Setting to 3.0 keeps the shape comfortably framed.
+controls.minDistance = 3.0;
+controls.maxDistance = 15;
+
+// Snap camera back to a known-good centered pose. Used at boot, when user
+// hits the "recenter" button, and as a safety measure before recording.
+function recenterCamera(){
+  camera.position.set(0, 0, 6.5);
+  controls.target.set(0, 0, 0);
+  camera.lookAt(controls.target);
+  controls.update();
+}
+
+// ---------- particle system (GPGPU — positions & velocities live on the GPU) ----------
+let points, particleMat;
+let gpuCompute = null;
+let posVar = null, velVar = null;
+let posTexSize = 0;
+let simPrevTime = 0;
+
+// Morph controller state
+let particleRandoms = null;    // stable per-particle (u,v,r1,r2,r3,seed)
+let particleCount   = 0;
+let homeTextureA = null;       // currently sitting at this shape
+let homeTextureB = null;       // morphing toward this shape
+let currentShape = 'torus';    // what A represents
+let targetShape  = null;       // what B represents (null if no morph pending)
+let morphBlend   = 0;          // 0..1 blend factor (mix of A→B)
+let morphPhase   = 'hold';     // 'hold' | 'transition'
+let morphPhaseStart = 0;       // time when this phase began
+let morphShapeHistory = [];    // for shuffle sequence
+
+const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+// Particle counts — with GPGPU we can push 10-20x higher than before.
+// Using square texture sizes: 128² = 16k, 256² = 65k, 512² = 262k, 1024² = 1M, 2048² = 4M
+const COUNT_MAP = isMobile
+  ? [16384, 32768, 65536, 131072, 262144, 400000, 600000]   // 128² → 256² → ...
+  : [32768, 131072, 262144, 500000, 1000000, 1600000, 2500000];
+
+// Shared GLSL: Ashima/Stefan Gustavson simplex noise 3D + curl from gradient version.
+// This is THE standard smooth noise for GPGPU particle work — smooth & continuous
+// everywhere, so particles drift gracefully instead of jittering.
+const NOISE_GLSL = `
+vec4 mod289(vec4 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
+vec4 permute(vec4 x){ return mod289(((x*34.0)+1.0)*x); }
+vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }
+vec3 fade(vec3 t){ return t*t*t*(t*(t*6.0-15.0)+10.0); }
+
+float snoise(vec3 v){
+  const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+  const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+  vec3 i  = floor(v + dot(v, C.yyy));
+  vec3 x0 = v - i + dot(i, C.xxx);
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min(g.xyz, l.zxy);
+  vec3 i2 = max(g.xyz, l.zxy);
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + C.yyy;
+  vec3 x3 = x0 - D.yyy;
+  i = mod289(vec4(i,0.0)).xyz;
+  vec4 p = permute(permute(permute(
+            i.z + vec4(0.0, i1.z, i2.z, 1.0))
+          + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+          + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+  float n_ = 0.142857142857;
+  vec3 ns = n_ * D.wyz - D.xzx;
+  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_);
+  vec4 x = x_ *ns.x + ns.yyyy;
+  vec4 y = y_ *ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+  vec4 b0 = vec4(x.xy, y.xy);
+  vec4 b1 = vec4(x.zw, y.zw);
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+  vec3 p0 = vec3(a0.xy, h.x);
+  vec3 p1 = vec3(a0.zw, h.y);
+  vec3 p2 = vec3(a1.xy, h.z);
+  vec3 p3 = vec3(a1.zw, h.w);
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+  p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+}
+
+// Curl of three decorrelated simplex noises → divergence-free flow field
+// (smooth, swirly, particles stay contained — exactly what HAL's motion uses)
+vec3 curlNoise(vec3 p){
+  const float e = 0.1;
+  vec3 dx = vec3(e, 0.0, 0.0);
+  vec3 dy = vec3(0.0, e, 0.0);
+  vec3 dz = vec3(0.0, 0.0, e);
+
+  vec3 p_x0 = p - dx;  vec3 p_x1 = p + dx;
+  vec3 p_y0 = p - dy;  vec3 p_y1 = p + dy;
+  vec3 p_z0 = p - dz;  vec3 p_z1 = p + dz;
+
+  float x = snoise(p_y1 + vec3(31.341, 0.0, 0.0)) - snoise(p_y0 + vec3(31.341, 0.0, 0.0))
+          - snoise(p_z1 + vec3(0.0, 31.341, 0.0)) + snoise(p_z0 + vec3(0.0, 31.341, 0.0));
+  float y = snoise(p_z1 + vec3(0.0, 0.0, 31.341)) - snoise(p_z0 + vec3(0.0, 0.0, 31.341))
+          - snoise(p_x1 + vec3(73.156, 0.0, 0.0)) + snoise(p_x0 + vec3(73.156, 0.0, 0.0));
+  float z = snoise(p_x1 + vec3(0.0, 73.156, 0.0)) - snoise(p_x0 + vec3(0.0, 73.156, 0.0))
+          - snoise(p_y1 + vec3(0.0, 0.0, 73.156)) + snoise(p_y0 + vec3(0.0, 0.0, 73.156));
+  return normalize(vec3(x, y, z) / (2.0 * e));
+}
+`;
+
+// Position update shader: p += v * dt
+const POS_SHADER = `
+uniform float uDelta;
+uniform float uTime;
+uniform float uBreathe;
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / resolution.xy;
+  vec4 pos = texture2D(texturePosition, uv);
+  vec4 vel = texture2D(textureVelocity, uv);
+  pos.xyz += vel.xyz * uDelta;
+  // Very gentle radial breathing — pulses the whole cloud in/out
+  float breathe = 1.0 + uBreathe * 0.02 * sin(uTime*0.5 + pos.w*6.28);
+  pos.xyz *= breathe;
+  gl_FragColor = pos;
+}
+`;
+
+// Velocity update shader: applies forces, integrates, damps.
+// Forces:
+//   1. Spring pulling particle back toward its "home" point on the shape surface
+//   2. Smooth curl noise perturbation
+//   3. Slow axis-rotation (orbital motion)
+// Momentum is preserved between frames via the velocity texture ping-pong.
+const VEL_SHADER = NOISE_GLSL + `
+uniform sampler2D textureHome;    // target A (current shape)
+uniform sampler2D textureHomeB;   // target B (next shape during morph)
+uniform float uMorph;             // 0 = pure A, 1 = pure B
+uniform float uPhase;             // 0 = hold (crisp), 1 = break (chaos)
+uniform float uDelta;
+uniform float uTime;
+uniform float uNoise;
+uniform float uSpeed;
+uniform float uSpring;    // base spring
+uniform float uDamping;   // base damping
+uniform float uOrbit;     // axis rotation strength
+uniform float uPulse;     // mode-specific breathing
+uniform vec3  uAxis;      // rotation axis (per-seed)
+uniform float uGroupSync; // 0 = individual drift, 1 = everyone moves together
+uniform float uContain;   // hard containment sphere radius (0 disables)
+uniform float uCrisp;     // 0 = soft lock-in, 1 = crystallize hard into shape
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / resolution.xy;
+  vec4 pos = texture2D(texturePosition, uv);
+  vec4 vel = texture2D(textureVelocity, uv);
+  vec4 homeA = texture2D(textureHome,  uv);
+  vec4 homeB = texture2D(textureHomeB, uv);
+
+  // Smooth S-curve for morph transition — feels natural
+  float mt = uMorph * uMorph * (3.0 - 2.0 * uMorph);
+  vec4 home = mix(homeA, homeB, mt);
+
+  vec3 p = pos.xyz;
+  vec3 v = vel.xyz;
+  vec3 h = home.xyz;
+
+  // --- Phase-aware parameters ---
+  // During "hold" (uPhase near 0): spring is STRONG, noise is WEAK → crisp snap
+  // During "break" (uPhase near 1): spring is WEAK, noise is STRONG → chaos
+  // uCrisp boosts the hold-phase tightness: higher spring, lower noise, so the
+  // shape actually CRYSTALLIZES instead of wobbling around the target.
+  float holdSpringBoost = mix(1.8, 5.0, uCrisp);   // up to 5× base at max crisp
+  float holdNoiseDamp   = mix(0.12, 0.005, uCrisp); // down to 0.5% noise during hold
+  float springPhase = uSpring * mix(holdSpringBoost, 0.35, uPhase);
+  float noisePhase  = uNoise  * mix(holdNoiseDamp, 1.6, uPhase);
+
+  // 1. Spring toward home (with optional pulse modulation)
+  float springMod = 1.0 + uPulse * sin(uTime * 1.2) * 0.8;
+  vec3 springForce = (h - p) * springPhase * springMod;
+
+  // 2. Noise force — the CRITICAL change for "containment" feel:
+  //    Instead of each particle getting its own uncorrelated noise, we sample
+  //    the noise field at the particle's HOME position (+ time), so adjacent
+  //    particles see near-identical flow. They move together in groups/bands
+  //    like schools of fish, not as a cloud of individual drifters.
+  //
+  //    When uGroupSync = 1, we use pure home-based sampling (fully synchronized).
+  //    When uGroupSync = 0, we use individual position (classic cloud behavior).
+  vec3 samplePos = mix(p, h, uGroupSync) * 1.4
+                 + vec3(uTime * 0.13, uTime * -0.09, uTime * 0.07);
+
+  // Distance-based containment — particles far from home get pulled back harder
+  float distFromHome = length(p - h);
+  float containment = 1.0 / (1.0 + distFromHome * 1.2);
+
+  vec3 flow = curlNoise(samplePos) * noisePhase * uSpeed * containment;
+
+  // 3. Synchronized orbital rotation — all particles share the same angular
+  //    velocity around the shape's axis. This is the "marching band" effect:
+  //    rings actually rotate AS rings, not as individual particles drifting.
+  //    Applied at the HOME point, not the current position, so the shape
+  //    rotates coherently even during chaos.
+  vec3 r = h - dot(h, uAxis) * uAxis;
+  vec3 orbital = cross(uAxis, r) * uOrbit * mix(1.3, 0.6, uPhase);
+
+  vec3 accel = springForce + flow + orbital;
+
+  // Phase-dependent damping — during hold, damp harder (prevents overshoot),
+  // during break, damp lightly (preserves momentum for nice streaks).
+  // uCrisp tightens the hold damping further so the shape CRYSTALLIZES
+  // (velocity kills quickly, particles snap to home instead of drifting).
+  float holdDamp = mix(uDamping - 0.03, uDamping - 0.12, uCrisp);
+  float dampPhase = mix(holdDamp, uDamping + 0.04, uPhase);
+  dampPhase = clamp(dampPhase, 0.55, 0.998);
+
+  v = v * dampPhase + accel * uDelta;
+
+  // HARD CONTAINMENT: keep the whole population visible on stage.
+  // If the next position would escape the containment sphere, reflect velocity
+  // inward and apply a soft penalty pulling back. This is HAL's "fixed
+  // population bounded in a volume" feel — particles rearrange within a stage,
+  // never leave it.
+  if(uContain > 0.0){
+    vec3 pNext = p + v * uDelta;
+    float pLen = length(pNext);
+    if(pLen > uContain){
+      vec3 n = pNext / max(pLen, 0.0001);
+      float vdotn = dot(v, n);
+      if(vdotn > 0.0){
+        // Reflect velocity's outward component, with energy loss so it damps
+        v -= n * vdotn * 1.7;
+      }
+      // Penalty pull back toward boundary
+      v += -n * (pLen - uContain) * 10.0;
+    }
+  }
+
+  gl_FragColor = vec4(v, vel.w);
+}
+`;
+
+// Per-particle stable randoms: each particle has (u, v, r1, r2, r3, seed).
+// These stay the same across shape re-samplings so when we morph torus→sphere,
+// particle #73 always goes to "its" torus spot then "its" sphere spot — giving
+// a coherent morph instead of chaotic shuffle.
+function generateParticleRandoms(count){
+  const out = new Float32Array(count * 6);
+  for(let i = 0; i < count; i++){
+    out[i*6    ] = rand();  // u
+    out[i*6 + 1] = rand();  // v
+    out[i*6 + 2] = rand();  // r1
+    out[i*6 + 3] = rand();  // r2
+    out[i*6 + 4] = rand();  // r3
+    out[i*6 + 5] = rand();  // seed (for coloring etc)
+  }
+  return out;
+}
+
+// ======================================================================
+//  PARAMETRIC SHAPE FAMILIES
+// ======================================================================
+//  Each family takes a set of continuous parameters (rolled from RNG) and
+//  maps stable per-particle randoms (u, v, r1..r3) to a 3D point.
+//  Every seed rolls a unique parameter instance -> essentially infinite
+//  shape space within each family.
+// ======================================================================
+
+function lerp(a, b, t){ return a + (b - a) * t; }
+
+// ---- Arc-length reparametrization ----
+// For curves where the parameter t doesn't correspond uniformly to arc length
+// (torus knots, Lissajous, superformulas), pre-compute a lookup table that
+// maps uniform u ∈ [0,1] → a non-uniform t that distributes sample points
+// evenly along the curve's actual length. This is what gives HAL's work its
+// even-density "every bit of the shape equally populated" look.
+//
+// buildArcLUT1D: for curves parametrized by one variable (knots, Lissajous).
+// fn(t) -> [x,y,z]. Returns a Float32Array of LUT_SIZE values.
+// Usage: const lut = buildArcLUT1D(t => trefoil(t));
+//        const tRemapped = lutLookup(lut, u);  // u ∈ [0,1]
+const LUT_SIZE = 256;
+
+function buildArcLUT1D(fn){
+  const N = 512;  // sample density (higher = more accurate)
+  const cum = new Float32Array(N + 1);
+  let prev = fn(0);
+  cum[0] = 0;
+  for(let i = 1; i <= N; i++){
+    const t = i / N;
+    const p = fn(t);
+    const dx = p[0]-prev[0], dy = p[1]-prev[1], dz = p[2]-prev[2];
+    cum[i] = cum[i-1] + Math.sqrt(dx*dx + dy*dy + dz*dz);
+    prev = p;
+  }
+  const total = cum[N];
+  // Build inverse LUT: for each arc-length fraction u, find t such that
+  // cum(t*N)/total ≈ u. Binary search for speed.
+  const lut = new Float32Array(LUT_SIZE);
+  for(let i = 0; i < LUT_SIZE; i++){
+    const target = (i / (LUT_SIZE - 1)) * total;
+    // Binary search
+    let lo = 0, hi = N;
+    while(lo < hi){
+      const mid = (lo + hi) >> 1;
+      if(cum[mid] < target) lo = mid + 1;
+      else hi = mid;
+    }
+    // Linear interp between bins for smoothness
+    const i0 = Math.max(0, lo - 1), i1 = lo;
+    const c0 = cum[i0], c1 = cum[i1];
+    const localT = c1 > c0 ? (target - c0) / (c1 - c0) : 0;
+    lut[i] = (i0 + localT) / N;
+  }
+  return lut;
+}
+
+function lutLookup(lut, u){
+  if(!lut) return u;
+  const f = Math.max(0, Math.min(1, u)) * (LUT_SIZE - 1);
+  const i = Math.floor(f);
+  const frac = f - i;
+  const a = lut[i];
+  const b = lut[Math.min(LUT_SIZE - 1, i + 1)];
+  return a + (b - a) * frac;
+}
+
+// Build a 2D arc-area LUT for surfaces sampled over (u,v).
+// For the superformula, the radius varies dramatically with theta and phi,
+// so uniform (u,v) sampling clumps particles in the spiky regions.
+// We reparametrize u (theta) only — the dominant sparseness axis.
+// fnR(theta) returns the radial magnitude at that theta.
+function buildArcLUT2D_theta(fnR){
+  // Approximate arc length along the latitude: ∫ r(θ) dθ
+  // For uniform-area we want u to map to θ such that ∫₀^θ r(θ') dθ' is uniform.
+  const N = 512;
+  const cum = new Float32Array(N + 1);
+  cum[0] = 0;
+  for(let i = 1; i <= N; i++){
+    const theta = (i / N) * Math.PI * 2 - Math.PI;
+    const r = Math.max(0.01, Math.min(3.0, fnR(theta)));
+    cum[i] = cum[i-1] + r / N;
+  }
+  const total = cum[N] || 1;
+  const lut = new Float32Array(LUT_SIZE);
+  for(let i = 0; i < LUT_SIZE; i++){
+    const target = (i / (LUT_SIZE - 1)) * total;
+    let lo = 0, hi = N;
+    while(lo < hi){
+      const mid = (lo + hi) >> 1;
+      if(cum[mid] < target) lo = mid + 1;
+      else hi = mid;
+    }
+    const i0 = Math.max(0, lo - 1), i1 = lo;
+    const c0 = cum[i0], c1 = cum[i1];
+    const localT = c1 > c0 ? (target - c0) / (c1 - c0) : 0;
+    lut[i] = (i0 + localT) / N;
+  }
+  return lut;
+}
+
+// Proper area-uniform 2D LUT for closed surfaces.
+// Given fnR(theta, phi) → radial magnitude, this builds a 2D CDF over the
+// parametric square (u, v) ∈ [0,1]² weighted by the true surface area element
+//     dS(θ, φ) = r(θ,φ)² · sin(φ)
+// so particles land on the surface with EQUAL DENSITY PER UNIT AREA —
+// spikes get proportionally fewer particles, smooth regions more. This is
+// what separates "cloud loosely shaped like X" from "X drawn cleanly by
+// particles." Returns { marginalPhi, rowsTheta } tables; call sample2D() to
+// sample a (u,v) pair area-uniformly.
+function buildAreaLUT2D(fnR){
+  // Grid resolution. 64×64 = 4096 function evaluations per shape — cheap.
+  // Higher resolution helps for very spiky shapes but quickly hits
+  // diminishing returns.
+  const NT = 64, NP = 64;
+  const density = new Float32Array(NT * NP);
+
+  // Step 1: fill the density grid with dS = r²·sin(φ)
+  for(let j = 0; j < NP; j++){
+    // Sample phi at cell center (more accurate than edges)
+    const phi = ((j + 0.5) / NP) * Math.PI;
+    const sp = Math.sin(phi);
+    for(let i = 0; i < NT; i++){
+      const theta = ((i + 0.5) / NT) * Math.PI * 2 - Math.PI;
+      const r = Math.max(0.001, Math.min(3.0, fnR(theta, phi)));
+      density[j * NT + i] = r * r * sp;
+    }
+  }
+
+  // Step 2: compute per-row cumulative sums (for theta given phi)
+  const rowsTheta = new Float32Array(NT * NP);
+  const rowTotals = new Float32Array(NP);
+  for(let j = 0; j < NP; j++){
+    let cum = 0;
+    for(let i = 0; i < NT; i++){
+      cum += density[j * NT + i];
+      rowsTheta[j * NT + i] = cum;
+    }
+    rowTotals[j] = cum > 1e-9 ? cum : 1;
+  }
+
+  // Step 3: marginal phi CDF (sum of each row's total)
+  const marginalPhi = new Float32Array(NP);
+  {
+    let cum = 0;
+    for(let j = 0; j < NP; j++){
+      cum += rowTotals[j];
+      marginalPhi[j] = cum;
+    }
+    const total = cum > 1e-9 ? cum : 1;
+    for(let j = 0; j < NP; j++) marginalPhi[j] /= total;
+  }
+  // Normalize each row's CDF to [0,1]
+  for(let j = 0; j < NP; j++){
+    const t = rowTotals[j];
+    for(let i = 0; i < NT; i++) rowsTheta[j * NT + i] /= t;
+  }
+
+  return { NT, NP, marginalPhi, rowsTheta };
+}
+
+// Given a 2D area LUT and two independent uniforms (u, v) ∈ [0,1]²,
+// return (uRemapped, vRemapped) ∈ [0,1]² sampled proportionally to the
+// surface area element. Use these in place of raw (u, v) when computing
+// the surface point.
+function sampleAreaLUT2D(lut, u, v){
+  if(!lut) return [u, v];
+  const { NT, NP, marginalPhi, rowsTheta } = lut;
+
+  // Step 1: binary-search marginalPhi for phi-cell j* where marginalPhi[j*] >= v
+  let lo = 0, hi = NP - 1;
+  while(lo < hi){
+    const mid = (lo + hi) >> 1;
+    if(marginalPhi[mid] < v) lo = mid + 1;
+    else hi = mid;
+  }
+  const jStar = lo;
+  // Linear interp within the phi cell
+  const prev = jStar > 0 ? marginalPhi[jStar - 1] : 0;
+  const cur  = marginalPhi[jStar];
+  const fj   = cur > prev ? (v - prev) / (cur - prev) : 0;
+  const vRemap = (jStar + fj) / NP;
+
+  // Step 2: binary-search the theta CDF at row jStar
+  const rowOff = jStar * NT;
+  lo = 0; hi = NT - 1;
+  while(lo < hi){
+    const mid = (lo + hi) >> 1;
+    if(rowsTheta[rowOff + mid] < u) lo = mid + 1;
+    else hi = mid;
+  }
+  const iStar = lo;
+  const pPrev = iStar > 0 ? rowsTheta[rowOff + iStar - 1] : 0;
+  const pCur  = rowsTheta[rowOff + iStar];
+  const fi    = pCur > pPrev ? (u - pPrev) / (pCur - pPrev) : 0;
+  const uRemap = (iStar + fi) / NT;
+
+  return [uRemap, vRemap];
+}
+
+// Factor out the 2D radial function for the superformula so roll/nearby/interp
+// build their area LUTs consistently without duplicating math.
+function _superformulaRadialFn(p){
+  return (theta, phi) => {
+    const t1 = p.mA * theta / 4;
+    const rTheta = Math.pow(
+      Math.pow(Math.abs(Math.cos(t1)), p.n2A) +
+      Math.pow(Math.abs(Math.sin(t1)), p.n3A),
+      -1/Math.max(p.n1A, 0.01));
+    const t2 = p.mB * phi / 4;
+    const rPhi = Math.pow(
+      Math.pow(Math.abs(Math.cos(t2)), p.n2B) +
+      Math.pow(Math.abs(Math.sin(t2)), p.n3B),
+      -1/Math.max(p.n1B, 0.01));
+    return Math.min(rTheta * rPhi, 3.0);
+  };
+}
+
+// Associated Legendre polynomials for spherical harmonics, precomputed at
+// quantum numbers (l, m) ∈ {(1,0)..(5,5)}. cp = cos(phi), sp = sin(phi).
+function _plm(l, m, cp, sp){
+  if(l===1 && m===0) return cp;
+  if(l===1 && m===1) return sp;
+  if(l===2 && m===0) return 0.5*(3*cp*cp - 1);
+  if(l===2 && m===1) return 3*cp*sp;
+  if(l===2 && m===2) return 3*sp*sp;
+  if(l===3 && m===0) return 0.5*cp*(5*cp*cp - 3);
+  if(l===3 && m===1) return 1.5*(5*cp*cp - 1)*sp;
+  if(l===3 && m===2) return 15*cp*sp*sp;
+  if(l===3 && m===3) return 15*sp*sp*sp;
+  if(l===4 && m===0) return (35*cp*cp*cp*cp - 30*cp*cp + 3)*0.125;
+  if(l===4 && m===1) return 2.5*cp*(7*cp*cp-3)*sp;
+  if(l===4 && m===2) return 7.5*(7*cp*cp-1)*sp*sp;
+  if(l===4 && m===3) return 105*cp*sp*sp*sp;
+  if(l===4 && m===4) return 105*sp*sp*sp*sp;
+  if(l===5 && m===2) return 52.5*cp*(3*cp*cp-1)*sp*sp;
+  if(l===5 && m===3) return 52.5*(9*cp*cp-1)*sp*sp*sp;
+  if(l===5 && m===4) return 945*cp*sp*sp*sp*sp;
+  if(l===5 && m===5) return 945*sp*sp*sp*sp*sp;
+  return cp;
+}
+
+// For spherical harmonics, the surface radius |Y(θ,φ)| mapped to a position
+// is r = 0.4 + 0.9 · |Y|/3 (matches the sample function). Using this for the
+// area LUT ensures particle density tracks actual lobe volume.
+function _sphericalHarmonicRadialFn(p){
+  const l = p.l, m = p.m;
+  return (theta, phi) => {
+    const cp = Math.cos(phi), sp = Math.sin(phi);
+    const Y = _plm(l, m, cp, sp) * (m > 0 ? Math.cos(m * theta) : 1);
+    const mag = Math.min(Math.abs(Y), 3.0);
+    return 0.4 + 0.9 * mag / 3;
+  };
+}
+
+const SHAPE_FAMILIES = {
+  // --- SUPERFORMULA: 3D Gielis supershape, 7 continuous params ---
+  superformula: {
+    roll(){
+      const mA = [3,4,5,6,7,8,10,12,16][Math.floor(rand()*9)];
+      const mB = [3,4,5,6,7,8,10][Math.floor(rand()*7)];
+      const params = {
+        mA, mB,
+        n1A: lerp(0.2, 2.0, rand()),
+        n2A: lerp(0.3, 6.0, rand()),
+        n3A: lerp(0.3, 6.0, rand()),
+        n1B: lerp(0.2, 2.0, rand()),
+        n2B: lerp(0.3, 6.0, rand()),
+        n3B: lerp(0.3, 6.0, rand()),
+      };
+      // True 2D area-uniform LUT: particles land on the surface with equal
+      // density per unit area. Spikes get proportionally fewer; smooth
+      // areas get more. Self-consistent with the sample() radial formula.
+      params.areaLUT = buildAreaLUT2D(_superformulaRadialFn(params));
+      return params;
+    },
+    nearby(p){
+      // Subtle drift within the family — each call produces a slightly
+      // different shape, NOT a meaningfully different one. Otherwise the
+      // hold phase looks like it's morphing into a new shape every couple
+      // of seconds instead of "breathing" through its own parameter space.
+      // Magnitudes here are 1/4 of what they used to be.
+      const next = {
+        mA: Math.max(2, p.mA + (Math.random() - 0.5) * 0.5),
+        mB: Math.max(2, p.mB + (Math.random() - 0.5) * 0.4),
+        n1A: Math.max(0.15, Math.min(2.2, p.n1A + (Math.random()-0.5)*0.12)),
+        n2A: Math.max(0.3, Math.min(6.0, p.n2A + (Math.random()-0.5)*0.4)),
+        n3A: Math.max(0.3, Math.min(6.0, p.n3A + (Math.random()-0.5)*0.4)),
+        n1B: Math.max(0.15, Math.min(2.2, p.n1B + (Math.random()-0.5)*0.12)),
+        n2B: Math.max(0.3, Math.min(6.0, p.n2B + (Math.random()-0.5)*0.4)),
+        n3B: Math.max(0.3, Math.min(6.0, p.n3B + (Math.random()-0.5)*0.4)),
+      };
+      next.areaLUT = buildAreaLUT2D(_superformulaRadialFn(next));
+      return next;
+    },
+    interp(a, b, t){
+      const next = {
+        mA: lerp(a.mA, b.mA, t),
+        mB: lerp(a.mB, b.mB, t),
+        n1A: lerp(a.n1A, b.n1A, t),
+        n2A: lerp(a.n2A, b.n2A, t),
+        n3A: lerp(a.n3A, b.n3A, t),
+        n1B: lerp(a.n1B, b.n1B, t),
+        n2B: lerp(a.n2B, b.n2B, t),
+        n3B: lerp(a.n3B, b.n3B, t),
+      };
+      // During continuous drift, rebuilding the LUT 8Hz (in automorphic)
+      // costs ~0.2ms per call — cheap enough to do inline.
+      next.areaLUT = buildAreaLUT2D(_superformulaRadialFn(next));
+      return next;
+    },
+    sample(u, v, r1, r2, r3, p){
+      // True 2D area-uniform remap: (u,v) get mapped to (θ,φ) weighted by the
+      // surface area element r²·sin(φ). Spiky high-curvature regions land
+      // with proportionally fewer particles (because they occupy less area),
+      // smooth regions with more, so the shape reads as EVEN across its
+      // whole surface. Old separable LUTs are fallbacks for older saved looks.
+      let uRemapped, vRemapped;
+      if(p.areaLUT){
+        const remap = sampleAreaLUT2D(p.areaLUT, u, v);
+        uRemapped = remap[0];
+        vRemapped = remap[1];
+      } else if(p.lutTheta && p.lutPhi){
+        uRemapped = lutLookup(p.lutTheta, u);
+        vRemapped = lutLookup(p.lutPhi,   v);
+      } else {
+        uRemapped = u;
+        vRemapped = v;
+      }
+      const phi = Math.acos(2*vRemapped - 1);
+      const theta = uRemapped * Math.PI * 2 - Math.PI;
+      function r(m, n1, n2, n3, ang){
+        const t = m * ang / 4;
+        return Math.pow(
+          Math.pow(Math.abs(Math.cos(t)), n2) +
+          Math.pow(Math.abs(Math.sin(t)), n3),
+          -1/Math.max(n1, 0.01));
+      }
+      const mag = Math.min(r(p.mA,p.n1A,p.n2A,p.n3A,theta) *
+                           r(p.mB,p.n1B,p.n2B,p.n3B,phi), 3.0) * 0.9;
+      return [
+        mag * Math.sin(phi) * Math.cos(theta),
+        mag * Math.sin(phi) * Math.sin(theta),
+        mag * Math.cos(phi),
+      ];
+    },
+  },
+
+  // --- TORUS KNOT family: (p,q) coprime pairs, thickness, twist ---
+  torusknot: {
+    roll(){
+      const pairs = [[2,3],[3,2],[2,5],[5,2],[3,4],[4,3],[3,5],[5,3],
+                     [3,7],[7,3],[2,7],[7,2],[4,5],[5,4],[2,9],[3,8]];
+      const pq = pairs[Math.floor(rand()*pairs.length)];
+      const pp = pq[0], qq = pq[1];
+      const R = lerp(0.7, 1.1, rand());
+      const params = {
+        p: pp, q: qq, R,
+        tube: lerp(0.015, 0.04, rand()),
+        twist: Math.floor(rand()*3),
+      };
+      // Build arc-length LUT so particles distribute evenly along the knot,
+      // not bunched at the bends.
+      params.lut = buildArcLUT1D(t => {
+        const tau = t * Math.PI * 2;
+        const pu = pp * tau, qu = qq * tau;
+        return [
+          (R + Math.cos(qu)) * Math.cos(pu),
+          (R + Math.cos(qu)) * Math.sin(pu),
+          Math.sin(qu),
+        ];
+      });
+      return params;
+    },
+    nearby(p){
+      // Subtle drift — small enough that the holding shape "breathes"
+      // rather than morphs into a different knot.
+      const next = {
+        p: p.p, q: p.q,
+        R:    Math.max(0.5, Math.min(1.3, p.R    + (Math.random()-0.5)*0.08)),
+        tube: Math.max(0.01, Math.min(0.05, p.tube + (Math.random()-0.5)*0.005)),
+        twist: p.twist + (Math.random()-0.5)*0.3,
+      };
+      next.lut = buildArcLUT1D(t => {
+        const tau = t * Math.PI * 2;
+        const pu = next.p * tau, qu = next.q * tau;
+        return [
+          (next.R + Math.cos(qu)) * Math.cos(pu),
+          (next.R + Math.cos(qu)) * Math.sin(pu),
+          Math.sin(qu),
+        ];
+      });
+      return next;
+    },
+    interp(a, b, t){
+      const next = {
+        p: a.p, q: a.q,
+        R: lerp(a.R, b.R, t),
+        tube: lerp(a.tube, b.tube, t),
+        twist: lerp(a.twist, b.twist, t),
+      };
+      // Interpolated params → fresh LUT (rebuild is cheap: ~512 samples)
+      next.lut = buildArcLUT1D(tau => {
+        const T = tau * Math.PI * 2;
+        const pu = next.p * T, qu = next.q * T;
+        return [
+          (next.R + Math.cos(qu)) * Math.cos(pu),
+          (next.R + Math.cos(qu)) * Math.sin(pu),
+          Math.sin(qu),
+        ];
+      });
+      return next;
+    },
+    sample(u, v, r1, r2, r3, params){
+      // Arc-length-uniform remap of u so particles distribute evenly
+      const uRemapped = lutLookup(params.lut, u);
+      const t = uRemapped * Math.PI * 2;
+      const tubAng = v * Math.PI * 2 + params.twist * t;
+      const pu = params.p * t, qu = params.q * t;
+      const cx = (params.R + Math.cos(qu)) * Math.cos(pu);
+      const cy = (params.R + Math.cos(qu)) * Math.sin(pu);
+      const cz = Math.sin(qu);
+      const rad = params.tube * (0.6 + 0.4 * r1);
+      return [
+        (cx + rad * Math.cos(tubAng) * Math.cos(pu)) * 0.6,
+        (cy + rad * Math.cos(tubAng) * Math.sin(pu)) * 0.6,
+        (cz + rad * Math.sin(tubAng)) * 0.6,
+      ];
+    },
+  },
+
+  // --- LISSAJOUS 3D: three-frequency standing waves ---
+  lissajous: {
+    roll(){
+      const pick = () => [1,2,3,4,5,6,7][Math.floor(rand()*7)];
+      const params = {
+        a: pick(), b: pick(), c: pick(),
+        dx: rand() * Math.PI * 2,
+        dy: rand() * Math.PI * 2,
+        thickness: lerp(0.01, 0.03, rand()),
+      };
+      params.lut = buildArcLUT1D(t => {
+        const T = t * Math.PI * 2;
+        return [
+          Math.sin(params.a * T + params.dx),
+          Math.sin(params.b * T + params.dy),
+          Math.sin(params.c * T),
+        ];
+      });
+      return params;
+    },
+    nearby(p){
+      const next = {
+        a: p.a, b: p.b, c: p.c,
+        // Phase drift kept subtle — the Lissajous topology is very sensitive
+        // to phase, large jumps look like new shapes appearing.
+        dx: p.dx + (Math.random()-0.5) * 0.3,
+        dy: p.dy + (Math.random()-0.5) * 0.3,
+        thickness: Math.max(0.005, Math.min(0.04, p.thickness + (Math.random()-0.5)*0.005)),
+      };
+      next.lut = buildArcLUT1D(t => {
+        const T = t * Math.PI * 2;
+        return [
+          Math.sin(next.a * T + next.dx),
+          Math.sin(next.b * T + next.dy),
+          Math.sin(next.c * T),
+        ];
+      });
+      return next;
+    },
+    interp(a, b, t){
+      const next = {
+        a: a.a, b: a.b, c: a.c,
+        dx: lerp(a.dx, b.dx, t),
+        dy: lerp(a.dy, b.dy, t),
+        thickness: lerp(a.thickness, b.thickness, t),
+      };
+      next.lut = buildArcLUT1D(tau => {
+        const T = tau * Math.PI * 2;
+        return [
+          Math.sin(next.a * T + next.dx),
+          Math.sin(next.b * T + next.dy),
+          Math.sin(next.c * T),
+        ];
+      });
+      return next;
+    },
+    sample(u, v, r1, r2, r3, p){
+      const uRemapped = lutLookup(p.lut, u);
+      const t = uRemapped * Math.PI * 2;
+      const cx = Math.sin(p.a * t + p.dx);
+      const cy = Math.sin(p.b * t + p.dy);
+      const cz = Math.sin(p.c * t);
+      const ang = v * Math.PI * 2;
+      const g = Math.sqrt(-2 * Math.log(Math.max(r1, 1e-6)));
+      const rad = p.thickness * g;
+      return [
+        (cx + rad * Math.cos(ang) * 0.5) * 1.2,
+        (cy + rad * Math.sin(ang) * 0.5) * 1.2,
+        (cz + rad * (r2 - 0.5) * 0.5) * 1.2,
+      ];
+    },
+  },
+
+  // --- SPHERICAL HARMONIC orbitals: real Y_l^m patterns ---
+  sphericalharmonic: {
+    roll(){
+      const picks = [
+        [1,0],[1,1],[2,0],[2,1],[2,2],[3,0],[3,1],[3,2],[3,3],
+        [4,0],[4,1],[4,2],[4,3],[4,4],[5,2],[5,3],[5,4],[5,5],
+      ];
+      const [l, m] = picks[Math.floor(rand()*picks.length)];
+      // Warp moves particles off the lobe surface — keep it very small for crispness
+      const params = { l, m, warp: lerp(0.0, 0.08, rand()) };
+      params.areaLUT = buildAreaLUT2D(_sphericalHarmonicRadialFn(params));
+      return params;
+    },
+    nearby(p){
+      const next = {
+        l: p.l, m: p.m,
+        warp: Math.max(0.0, Math.min(0.15, p.warp + (Math.random()-0.5)*0.008)),
+      };
+      next.areaLUT = buildAreaLUT2D(_sphericalHarmonicRadialFn(next));
+      return next;
+    },
+    interp(a, b, t){
+      const next = { l: a.l, m: a.m, warp: lerp(a.warp, b.warp, t) };
+      next.areaLUT = buildAreaLUT2D(_sphericalHarmonicRadialFn(next));
+      return next;
+    },
+    sample(u, v, r1, r2, r3, p){
+      // True area-uniform 2D remap — lobe "flat" regions get proportional
+      // density vs "tip" high-radius regions. No more visible density jumps
+      // between lobe cores and equator gaps.
+      let uR = u, vR = v;
+      if(p.areaLUT){
+        const remap = sampleAreaLUT2D(p.areaLUT, u, v);
+        uR = remap[0]; vR = remap[1];
+      }
+      const theta = uR * Math.PI * 2;
+      const phi = Math.acos(2*vR - 1);
+      const cp = Math.cos(phi), sp = Math.sin(phi);
+      const l = p.l, m = p.m;
+      const Y = _plm(l, m, cp, sp) * (m > 0 ? Math.cos(m * theta) : 1);
+      const mag = Math.min(Math.abs(Y), 3.0);
+      const r = 0.4 + 0.9 * mag / 3 + p.warp * (r1 - 0.5);
+      return [
+        r * Math.sin(phi) * Math.cos(theta),
+        r * Math.sin(phi) * Math.sin(theta),
+        r * Math.cos(phi),
+      ];
+    },
+  },
+
+  // --- STRANGE ATTRACTOR: integrated ODE systems ---
+  attractor: {
+    roll(){
+      const types = ['lorenz','aizawa','thomas','halvorsen','dadras'];
+      return { type: types[Math.floor(rand()*types.length)] };
+    },
+    // Attractor type stays fixed — changing type restarts integration entirely,
+    // which isn't interpolatable. Return same params.
+    nearby(p){ return { type: p.type }; },
+    interp(a, b, t){ return { type: a.type }; },
+    sample(u, v, r1, r2, r3, p){
+      let x = (u - 0.5) * 2;
+      let y = (v - 0.5) * 2;
+      let z = (r1 - 0.5) * 2;
+      const steps = 250;
+      const h = 0.006;
+      for(let s = 0; s < steps; s++){
+        let dx=0, dy=0, dz=0;
+        if(p.type === 'lorenz'){
+          const sigma=10, rho=28, beta=8/3;
+          dx = sigma*(y - x);
+          dy = x*(rho - z) - y;
+          dz = x*y - beta*z;
+        } else if(p.type === 'aizawa'){
+          const a=0.95, b=0.7, c=0.6, d=3.5, e=0.25, f=0.1;
+          dx = (z-b)*x - d*y;
+          dy = d*x + (z-b)*y;
+          dz = c + a*z - z*z*z/3 - (x*x + y*y)*(1 + e*z) + f*z*x*x*x;
+        } else if(p.type === 'thomas'){
+          const b=0.208186;
+          dx = Math.sin(y) - b*x;
+          dy = Math.sin(z) - b*y;
+          dz = Math.sin(x) - b*z;
+        } else if(p.type === 'halvorsen'){
+          const a = 1.89;
+          dx = -a*x - 4*y - 4*z - y*y;
+          dy = -a*y - 4*z - 4*x - z*z;
+          dz = -a*z - 4*x - 4*y - x*x;
+        } else { // dadras
+          const a=3, b=2.7, c=1.7, d=2, e=9;
+          dx = y - a*x + b*y*z;
+          dy = c*y - x*z + z;
+          dz = d*x*y - e*z;
+        }
+        x += dx * h; y += dy * h; z += dz * h;
+        if(!isFinite(x) || Math.abs(x) > 1e3){ x = y = z = 0; break; }
+      }
+      const scale = p.type === 'lorenz'     ? 0.035 :
+                    p.type === 'aizawa'     ? 0.8   :
+                    p.type === 'thomas'     ? 0.35  :
+                    p.type === 'halvorsen'  ? 0.12  :
+                                              0.12;
+      return [x*scale, y*scale, z*scale];
+    },
+  },
+};
+
+const FAMILY_NAMES = Object.keys(SHAPE_FAMILIES);
+
+// Current parameters for the active shape (rolled when a new shape is picked)
+let currentShapeParams = null;
+let targetShapeParams = null;
+
+// Multi-shape composition state — when Multi-shape is enabled, particles are
+// segregated into N groups (numGroups). Each group independently tracks its
+// own current shape + params + morph phase, and they're all rendered
+// simultaneously on the same physics engine. This is the "multi morphing
+// simultaneously" layered composition feel — HAL regularly has a sphere AND
+// rings AND a knot visible at once.
+let numGroups = 1;                 // 1 = classic single-shape; 2-3 = multi
+let particleGroupIds = null;       // per-particle group assignment (0..numGroups-1)
+let groupShapes       = [];        // current shape name per group
+let groupShapeParams  = [];        // current param instance per group
+let groupTargetShapes = [];        // target shape per group (during morph)
+let groupTargetParams = [];        // target params per group (during morph)
+
+// Automorphic continuum state — parameters slowly drift through the family's
+// parameter space during HOLD, giving "the shape is breathing through itself"
+let driftFromParams = null;      // starting params for current drift segment
+let driftToParams   = null;      // destination params
+let driftSegStart   = 0;         // timestamp when current drift segment began
+let driftSegLen     = 2.5;       // how long each drift segment takes (sec)
+let lastHomeSample  = -999;      // last time we re-sampled the home texture
+// For multi-group automorphic drift we keep per-group drift state:
+let groupDriftFrom  = [];
+let groupDriftTo    = [];
+
+function rollShapeParams(family){
+  return SHAPE_FAMILIES[family] ? SHAPE_FAMILIES[family].roll() : null;
+}
+
+// Short descriptive tag for HUD (e.g. "superformula m=7")
+function describeShape(family, params){
+  if(!params) return family;
+  if(family === 'superformula')       return `sf(${params.mA}/${params.mB})`;
+  if(family === 'torusknot')          return `knot(${params.p},${params.q})`;
+  if(family === 'lissajous')          return `liss(${params.a},${params.b},${params.c})`;
+  if(family === 'sphericalharmonic')  return `Y[${params.l},${params.m}]`;
+  if(family === 'attractor')          return params.type;
+  return family;
+}
+
+// Sample a shape using stable per-particle randoms.
+// Returns a Float32Array of xyz+seed, length count*4.
+function sampleShapeStable(shape, count, randoms, params){
+  const out = new Float32Array(count * 4);
+  const fam = SHAPE_FAMILIES[shape];
+
+  for(let i = 0; i < count; i++){
+    const u  = randoms[i*6    ];
+    const v  = randoms[i*6 + 1];
+    const r1 = randoms[i*6 + 2];
+    const r2 = randoms[i*6 + 3];
+    const r3 = randoms[i*6 + 4];
+    let x=0, y=0, z=0;
+
+    if(fam){
+      // Parametric family — use rolled params
+      const pt = fam.sample(u, v, r1, r2, r3, params || fam.roll());
+      x = pt[0]; y = pt[1]; z = pt[2];
+    } else if(shape === 'torus'){
+      // Particles ON the torus surface (major 1.0, minor 0.32), no thickness jitter
+      const R = 1.0, r = 0.32;
+      const a = u * Math.PI * 2;
+      const b = v * Math.PI * 2;
+      x = (R + r*Math.cos(b)) * Math.cos(a);
+      y = (R + r*Math.cos(b)) * Math.sin(a);
+      z =  r*Math.sin(b);
+    } else if(shape === 'sphere'){
+      // Exact unit sphere — zero shell thickness
+      const phi = Math.acos(2*v - 1);
+      const theta = u * Math.PI * 2;
+      x = Math.sin(phi) * Math.cos(theta);
+      y = Math.sin(phi) * Math.sin(theta);
+      z = Math.cos(phi);
+    } else if(shape === 'rings'){
+      // Clean concentric rings on the (x,y) plane — no wobble, no tilt scatter.
+      // Discretize v into 5 ring indices so we get BANDS not continuous density.
+      const ringIdx = Math.floor(v * 5);
+      const radius = 0.45 + ringIdx * 0.24;
+      const a = u * Math.PI * 2;
+      const tilt = ringIdx * 0.28;   // each ring tilted slightly differently
+      x = radius * Math.cos(a);
+      y = radius * Math.sin(a) * Math.cos(tilt);
+      z = radius * Math.sin(a) * Math.sin(tilt);
+    } else if(shape === 'disc'){
+      // Flat spiral disc, zero thickness
+      const radius = Math.sqrt(v) * 1.4;
+      const a = u * Math.PI * 2 + radius * 2.5;
+      x = radius * Math.cos(a);
+      y = radius * Math.sin(a);
+      z = 0;
+    } else if(shape === 'cloud'){
+      // Cloud is intentionally volumetric — leave it
+      const r = Math.sqrt(-2 * Math.log(Math.max(r1, 1e-6)));
+      const phi = Math.acos(2*v - 1);
+      const theta = u * Math.PI * 2;
+      x = r * 0.45 * Math.sin(phi) * Math.cos(theta);
+      y = r * 0.45 * Math.sin(phi) * Math.sin(theta);
+      z = r * 0.45 * Math.cos(phi);
+    } else if(shape === 'helix'){
+      // Exact double-helix curves
+      const strand = v < 0.5 ? 0.0 : Math.PI;
+      const t = u * Math.PI * 6;
+      const rad = 0.85;
+      x = rad * Math.cos(t + strand);
+      y = (u - 0.5) * 2.0;
+      z = rad * Math.sin(t + strand);
+    } else if(shape === 'cube'){
+      // Cube surface (faces), no thickness
+      const face = Math.floor(v * 6);
+      const s = u * 2 - 1;
+      const tt = r1 * 2 - 1;
+      if(face===0)      { x= 1; y= s; z= tt; }
+      else if(face===1) { x=-1; y= s; z= tt; }
+      else if(face===2) { y= 1; x= s; z= tt; }
+      else if(face===3) { y=-1; x= s; z= tt; }
+      else if(face===4) { z= 1; x= s; y= tt; }
+      else              { z=-1; x= s; y= tt; }
+      x *= 0.85; y *= 0.85; z *= 0.85;
+    } else { // knot — trefoil on the actual curve, no tube
+      const t = u * Math.PI * 2;
+      x = Math.sin(t) + 2*Math.sin(2*t);
+      y = Math.cos(t) - 2*Math.cos(2*t);
+      z = -Math.sin(3*t);
+      x *= 0.32; y *= 0.32; z *= 0.32;
+    }
+
+    out[i*4    ] = x;
+    out[i*4 + 1] = y;
+    out[i*4 + 2] = z;
+    out[i*4 + 3] = randoms[i*6 + 5];
+  }
+  return out;
+}
+
+// Back-compat wrapper that generates fresh randoms (for non-morph callers)
+function sampleShape(shape, count){
+  const randoms = generateParticleRandoms(count);
+  const params = SHAPE_FAMILIES[shape] ? SHAPE_FAMILIES[shape].roll() : null;
+  return sampleShapeStable(shape, count, randoms, params);
+}
+
+// Multi-group sampler: each particle is sampled according to its group's
+// shape+params. Groups are defined by particleGroupIds[i] ∈ [0..numGroups-1].
+// This is what makes multi-shape compositions possible (sphere + rings + knot
+// visible simultaneously, each defined by its segment of the particle pool).
+function sampleMultiShape(count, randoms, groupIds, shapes, paramsPerGroup){
+  const out = new Float32Array(count * 4);
+  // For performance, cache per-group family references (avoid object lookup in hot loop)
+  const fams = shapes.map(s => SHAPE_FAMILIES[s]);
+
+  for(let i = 0; i < count; i++){
+    const g = groupIds[i];
+    const shape = shapes[g];
+    const params = paramsPerGroup[g];
+    const fam = fams[g];
+
+    const u  = randoms[i*6    ];
+    const v  = randoms[i*6 + 1];
+    const r1 = randoms[i*6 + 2];
+    const r2 = randoms[i*6 + 3];
+    const r3 = randoms[i*6 + 4];
+    let x=0, y=0, z=0;
+
+    if(fam){
+      const pt = fam.sample(u, v, r1, r2, r3, params);
+      x = pt[0]; y = pt[1]; z = pt[2];
+    } else {
+      // Classic shape — reuse inline code for torus/sphere/rings/etc
+      if(shape === 'torus'){
+        const R = 1.0, r = 0.32;
+        const a = u * Math.PI * 2, b = v * Math.PI * 2;
+        x = (R + r*Math.cos(b)) * Math.cos(a);
+        y = (R + r*Math.cos(b)) * Math.sin(a);
+        z =  r*Math.sin(b);
+      } else if(shape === 'sphere'){
+        const phi = Math.acos(2*v - 1);
+        const theta = u * Math.PI * 2;
+        x = Math.sin(phi) * Math.cos(theta);
+        y = Math.sin(phi) * Math.sin(theta);
+        z = Math.cos(phi);
+      } else if(shape === 'rings'){
+        const ringIdx = Math.floor(v * 5);
+        const radius = 0.45 + ringIdx * 0.24;
+        const a = u * Math.PI * 2;
+        const tilt = ringIdx * 0.28;
+        x = radius * Math.cos(a);
+        y = radius * Math.sin(a) * Math.cos(tilt);
+        z = radius * Math.sin(a) * Math.sin(tilt);
+      } else if(shape === 'disc'){
+        const radius = Math.sqrt(v) * 1.4;
+        const a = u * Math.PI * 2 + radius * 2.5;
+        x = radius * Math.cos(a); y = radius * Math.sin(a); z = 0;
+      } else if(shape === 'cloud'){
+        const r = Math.sqrt(-2 * Math.log(Math.max(r1, 1e-6)));
+        const phi = Math.acos(2*v - 1), theta = u * Math.PI * 2;
+        x = r * 0.45 * Math.sin(phi) * Math.cos(theta);
+        y = r * 0.45 * Math.sin(phi) * Math.sin(theta);
+        z = r * 0.45 * Math.cos(phi);
+      } else if(shape === 'helix'){
+        const strand = v < 0.5 ? 0.0 : Math.PI;
+        const t = u * Math.PI * 6;
+        x = 0.85 * Math.cos(t + strand);
+        y = (u - 0.5) * 2.0;
+        z = 0.85 * Math.sin(t + strand);
+      } else if(shape === 'cube'){
+        const face = Math.floor(v * 6);
+        const s = u * 2 - 1, tt = r1 * 2 - 1;
+        if(face===0)      { x= 1; y= s; z= tt; }
+        else if(face===1) { x=-1; y= s; z= tt; }
+        else if(face===2) { y= 1; x= s; z= tt; }
+        else if(face===3) { y=-1; x= s; z= tt; }
+        else if(face===4) { z= 1; x= s; y= tt; }
+        else              { z=-1; x= s; y= tt; }
+        x *= 0.85; y *= 0.85; z *= 0.85;
+      } else { // knot fallback
+        const t = u * Math.PI * 2;
+        x = (Math.sin(t) + 2*Math.sin(2*t)) * 0.32;
+        y = (Math.cos(t) - 2*Math.cos(2*t)) * 0.32;
+        z = -Math.sin(3*t) * 0.32;
+      }
+    }
+
+    // Per-group scale so layered shapes don't overlap exactly — each group
+    // gets a slightly different size, producing a nested-composition look.
+    const groupScale = 1.0 - g * 0.25;   // group 0 = full size, group 1 = 0.75, etc
+    out[i*4    ] = x * groupScale;
+    out[i*4 + 1] = y * groupScale;
+    out[i*4 + 2] = z * groupScale;
+    out[i*4 + 3] = randoms[i*6 + 5];
+  }
+  return out;
+}
+
+function buildParticles(shape, count, palette){
+  // Clean up previous
+  if(points){
+    scene.remove(points);
+    points.geometry.dispose();
+    points.material.dispose();
+  }
+  if(gpuCompute){
+    gpuCompute.dispose && gpuCompute.dispose();
+    gpuCompute = null;
+  }
+
+  // Round count DOWN to nearest square for texture dimensions
+  const side = Math.floor(Math.sqrt(count));
+  const realCount = side * side;
+  posTexSize = side;
+
+  gpuCompute = new GPUComputationRenderer(side, side, renderer);
+
+  // WebGL1 fallback (rare on Iris Xe but defensive)
+  if(renderer.capabilities.isWebGL2 === false){
+    gpuCompute.setDataType(THREE.HalfFloatType);
+  }
+
+  // Generate stable per-particle randoms once. These stay constant so when we
+  // re-sample a different shape, particle #N always goes to a coherent new spot
+  // and the morph transition looks like an actual transformation, not a shuffle.
+  particleRandoms = generateParticleRandoms(realCount);
+  particleCount = realCount;
+
+  // Multi-shape composition init — read from UI checkbox and count slider.
+  // When enabled, each particle gets assigned to one of N groups deterministically.
+  const multiEnabled = ui && ui.multiOn && ui.multiOn.checked;
+  numGroups = multiEnabled ? parseInt(ui.multiN.value, 10) : 1;
+  particleGroupIds = new Uint8Array(realCount);
+  groupShapes = [];
+  groupShapeParams = [];
+  groupTargetShapes = new Array(numGroups).fill(null);
+  groupTargetParams = new Array(numGroups).fill(null);
+  groupDriftFrom = new Array(numGroups).fill(null);
+  groupDriftTo   = new Array(numGroups).fill(null);
+
+  // Assign particles to groups. Round-robin (every Nth particle) gives even
+  // distribution regardless of groupCount vs particleCount.
+  for(let i = 0; i < realCount; i++){
+    particleGroupIds[i] = i % numGroups;
+  }
+
+  // Roll a shape + params per group. For group 0 use the requested shape;
+  // other groups get random picks from the parametric families.
+  for(let g = 0; g < numGroups; g++){
+    const s = (g === 0) ? shape : FAMILY_NAMES[Math.floor(rand() * FAMILY_NAMES.length)];
+    groupShapes.push(s);
+    groupShapeParams.push(rollShapeParams(s));
+  }
+
+  // Build the initial home array using the multi-group sampler
+  const homeArrA = numGroups > 1
+    ? sampleMultiShape(realCount, particleRandoms, particleGroupIds, groupShapes, groupShapeParams)
+    : sampleShapeStable(shape, realCount, particleRandoms, groupShapeParams[0]);
+
+  // Keep legacy single-shape state in sync (points at group 0)
+  currentShape = groupShapes[0];
+  currentShapeParams = groupShapeParams[0];
+
+  const homeTex = gpuCompute.createTexture();
+  homeTex.image.data.set(homeArrA);
+
+  // Home B — target shape for morph. At init both are the same (morph factor = 0).
+  const homeTexB = gpuCompute.createTexture();
+  homeTexB.image.data.set(homeArrA);
+  targetShapeParams = null;
+
+  // Track in state for the morph controller
+  homeTextureA = homeTex;
+  homeTextureB = homeTexB;
+  morphBlend = 0;
+  morphPhase = 'hold';
+  morphPhaseStart = 0;
+
+  // Initial position texture — particles start AT their home with tiny random offset
+  const posTex = gpuCompute.createTexture();
+  const posData = posTex.image.data;
+  for(let i = 0; i < realCount; i++){
+    posData[i*4    ] = homeArrA[i*4    ] + (rand()-0.5)*0.04;
+    posData[i*4 + 1] = homeArrA[i*4 + 1] + (rand()-0.5)*0.04;
+    posData[i*4 + 2] = homeArrA[i*4 + 2] + (rand()-0.5)*0.04;
+    posData[i*4 + 3] = homeArrA[i*4 + 3];  // seed
+  }
+
+  // Initial velocity texture — small random
+  const velTex = gpuCompute.createTexture();
+  const velData = velTex.image.data;
+  for(let i = 0; i < realCount; i++){
+    velData[i*4    ] = (rand()-0.5) * 0.1;
+    velData[i*4 + 1] = (rand()-0.5) * 0.1;
+    velData[i*4 + 2] = (rand()-0.5) * 0.1;
+    velData[i*4 + 3] = homeArrA[i*4 + 3];
+  }
+
+  posVar = gpuCompute.addVariable('texturePosition', POS_SHADER, posTex);
+  velVar = gpuCompute.addVariable('textureVelocity', VEL_SHADER, velTex);
+
+  gpuCompute.setVariableDependencies(posVar, [posVar, velVar]);
+  gpuCompute.setVariableDependencies(velVar, [posVar, velVar]);
+
+  // Register both home textures as uniform samplers on the velocity update shader
+  velVar.material.uniforms.textureHome  = { value: homeTex  };
+  velVar.material.uniforms.textureHomeB = { value: homeTexB };
+  velVar.material.uniforms.uMorph       = { value: 0 };
+
+  // Uniforms for velocity shader
+  velVar.material.uniforms.uDelta   = { value: 1/60 };
+  velVar.material.uniforms.uTime    = { value: 0 };
+  velVar.material.uniforms.uNoise   = { value: 0.35 };
+  velVar.material.uniforms.uSpeed   = { value: 0.6 };
+  velVar.material.uniforms.uSpring  = { value: 1.2 };    // home-spring strength
+  velVar.material.uniforms.uDamping = { value: 0.94 };   // energy retention (=> grace)
+  velVar.material.uniforms.uOrbit   = { value: 0.15 };   // axis-rotation strength
+  velVar.material.uniforms.uPulse   = { value: 0.0 };    // plasma-mode pulsing
+  velVar.material.uniforms.uPhase   = { value: 0.0 };    // 0=hold (crisp) 1=break (chaos)
+  velVar.material.uniforms.uGroupSync = { value: 0.7 };  // 0=individual 1=synced marching band
+  velVar.material.uniforms.uContain = { value: 1.8 };    // containment sphere radius (0 disables)
+  velVar.material.uniforms.uCrisp   = { value: 0.5 };    // 0=soft, 1=hard crystallize
+  velVar.material.uniforms.uAxis    = { value: new THREE.Vector3(
+      rand()-0.5, rand()-0.5, rand()-0.5).normalize() };
+
+  // Uniforms for position shader
+  posVar.material.uniforms.uDelta   = { value: 1/60 };
+  posVar.material.uniforms.uTime    = { value: 0 };
+  posVar.material.uniforms.uBreathe = { value: 1.0 };
+
+  const err = gpuCompute.init();
+  if(err !== null){
+    console.error('GPUComputationRenderer init failed:', err);
+    alert('GPU particle system failed to initialise: '+err);
+    return;
+  }
+
+  // Build the render geometry — just an index-lookup grid of point vertices.
+  // The vertex shader reads the position from the ping-pong texture each frame.
+  const refUVs = new Float32Array(realCount * 2);
+  const seeds  = new Float32Array(realCount);
+  for(let i = 0; i < realCount; i++){
+    const x = (i % side) / side;
+    const y = Math.floor(i / side) / side;
+    refUVs[i*2    ] = x + 0.5/side;
+    refUVs[i*2 + 1] = y + 0.5/side;
+    seeds[i] = homeArrA[i*4 + 3];
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(realCount * 3), 3));
+  geo.setAttribute('aRef',   new THREE.BufferAttribute(refUVs, 2));
+  geo.setAttribute('aSeed',  new THREE.BufferAttribute(seeds, 1));
+
+  particleMat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uPosTex:  { value: null },
+      uVelTex:  { value: null },
+      uTime:    { value: 0 },
+      uSize:    { value: isMobile ? 1.2 : 1.6 },
+      uPixel:   { value: renderer.getPixelRatio() },
+      uBrightness: { value: 1.0 },
+      uPalA:    { value: new THREE.Vector3().fromArray(palette.a) },
+      uPalB:    { value: new THREE.Vector3().fromArray(palette.b) },
+      uPalC:    { value: new THREE.Vector3().fromArray(palette.c) },
+      uPalD:    { value: new THREE.Vector3().fromArray(palette.d) },
+    },
+    vertexShader: /*glsl*/`
+      attribute vec2  aRef;
+      attribute float aSeed;
+      uniform sampler2D uPosTex;
+      uniform sampler2D uVelTex;
+      uniform float uTime;
+      uniform float uSize;
+      uniform float uPixel;
+      varying float vSpeed;
+      varying float vSeed;
+
+      void main(){
+        vec4 pos = texture2D(uPosTex, aRef);
+        vec4 vel = texture2D(uVelTex, aRef);
+        vSpeed = length(vel.xyz);
+        vSeed  = aSeed;
+
+        vec4 mv = modelViewMatrix * vec4(pos.xyz, 1.0);
+        gl_Position = projectionMatrix * mv;
+
+        float d = -mv.z;
+        // Smaller, tighter points — HAL style: particles act as pixels defining
+        // the shape's edge, not as fuzzy atmosphere sprites.
+        gl_PointSize = uSize * uPixel * (0.8 / max(d*0.6, 0.001));
+        gl_PointSize = clamp(gl_PointSize, 0.5, 2.2);
+      }
+    `,
+    fragmentShader: /*glsl*/`
+      precision highp float;
+      uniform vec3 uPalA, uPalB, uPalC, uPalD;
+      uniform float uBrightness;
+      varying float vSpeed;
+      varying float vSeed;
+
+      vec3 palette(float t){
+        return uPalA + uPalB * cos(6.28318 * (uPalC*t + uPalD));
+      }
+
+      void main(){
+        vec2 c = gl_PointCoord - 0.5;
+        float r = length(c);
+        if(r > 0.5) discard;
+        // Very tight Gaussian — each particle is essentially a crisp dot with
+        // a minimal halo. Density of points defines the shape, not softness.
+        float a = exp(-r*r * 35.0);
+        // Color from palette + speed — fast particles glow hotter colors
+        vec3 col = palette(vSeed*0.55 + vSpeed*1.3);
+        col *= (0.4 + 2.5 * vSpeed) * uBrightness;
+        gl_FragColor = vec4(col * a, a);
+      }
+    `,
+  });
+
+  points = new THREE.Points(geo, particleMat);
+  points.frustumCulled = false;  // texture-driven positions, bbox is meaningless
+  scene.add(points);
+
+  simPrevTime = 0;
+}
+
+// ---------- morph controller ----------
+// Shapes the morph controller picks between. Parametric families come
+// first — every pick from one of these rolls a fresh mathematical instance
+// (torus knot (p,q), supershape 7 parameters, attractor type, etc), so
+// the space of reachable shapes is essentially infinite.
+const MORPH_SHAPES = [
+  'superformula','torusknot','lissajous','sphericalharmonic','attractor',
+  'torus','sphere','rings','knot','disc','cloud','helix','cube',
+];
+
+function pickNextMorphShape(strategy){
+  const avail = MORPH_SHAPES.filter(s => s !== currentShape);
+  if(strategy === 'cycle'){
+    // Walk through the shapes in order
+    const i = MORPH_SHAPES.indexOf(currentShape);
+    return MORPH_SHAPES[(i + 1) % MORPH_SHAPES.length];
+  }
+  if(strategy === 'shuffle'){
+    // Use up all shapes before repeating any
+    if(morphShapeHistory.length >= MORPH_SHAPES.length - 1){
+      morphShapeHistory = [];
+    }
+    const unused = avail.filter(s => !morphShapeHistory.includes(s));
+    const pick = unused[Math.floor(Math.random() * unused.length)];
+    morphShapeHistory.push(pick);
+    return pick;
+  }
+  // random
+  return avail[Math.floor(Math.random() * avail.length)];
+}
+
+function regenerateHomeB(newShape){
+  if(!homeTextureB || !particleRandoms) return;
+
+  if(numGroups > 1){
+    // Multi-shape: ALL groups roll new shapes + params simultaneously.
+    // This gives the "everything breaks apart and re-forms as entirely new
+    // composition" cascade feel.
+    for(let g = 0; g < numGroups; g++){
+      const next = FAMILY_NAMES[Math.floor(Math.random() * FAMILY_NAMES.length)];
+      groupTargetShapes[g] = next;
+      groupTargetParams[g] = rollShapeParams(next);
+    }
+    const newHomeArr = sampleMultiShape(
+      particleCount, particleRandoms, particleGroupIds,
+      groupTargetShapes, groupTargetParams);
+    homeTextureB.image.data.set(newHomeArr);
+    homeTextureB.needsUpdate = true;
+    // Keep legacy names synced to group 0 for HUD
+    targetShape = groupTargetShapes[0];
+    targetShapeParams = groupTargetParams[0];
+    return;
+  }
+
+  // Single-shape path (original): every morph rolls a fresh parametric instance
+  targetShapeParams = rollShapeParams(newShape);
+  const newHomeArr = sampleShapeStable(newShape, particleCount, particleRandoms, targetShapeParams);
+  homeTextureB.image.data.set(newHomeArr);
+  homeTextureB.needsUpdate = true;
+  targetShape = newShape;
+}
+
+// Called when a morph transition finishes: B becomes the new A, B is freshened.
+function swapHomes(){
+  if(!homeTextureA || !homeTextureB) return;
+  homeTextureA.image.data.set(homeTextureB.image.data);
+  homeTextureA.needsUpdate = true;
+
+  if(numGroups > 1){
+    // Promote each group's target to current
+    for(let g = 0; g < numGroups; g++){
+      if(groupTargetShapes[g]) groupShapes[g] = groupTargetShapes[g];
+      if(groupTargetParams[g]) groupShapeParams[g] = groupTargetParams[g];
+      groupTargetShapes[g] = null;
+      groupTargetParams[g] = null;
+      groupDriftFrom[g] = null;
+      groupDriftTo[g]   = null;
+    }
+    currentShape       = groupShapes[0];
+    currentShapeParams = groupShapeParams[0];
+  } else {
+    currentShape = targetShape || currentShape;
+    currentShapeParams = targetShapeParams || currentShapeParams;
+    targetShape = null;
+    driftFromParams = null;
+    driftToParams = null;
+  }
+
+  morphBlend = 0;
+  if(velVar) velVar.material.uniforms.uMorph.value = 0;
+}
+
+// Advance the automorphic continuum drift. Called every frame; re-samples
+// the home A texture at a low rate (6-10 Hz) with interpolated parameters
+// so the shape flows continuously through the family's parameter space.
+// Only active during HOLD phase of morph (or always, if morph is off and
+// we're sitting in a single shape).
+function updateAutomorphic(t){
+  if(!ui || !ui.autoOn || !ui.autoOn.checked) return;
+  if(!homeTextureA || !particleRandoms) return;
+
+  // Drift only during HOLD. During transitions, homeB is actively being
+  // rebuilt — don't step on it.
+  if(morphPhase === 'transition') return;
+
+  // SETTLE delay: skip drift for the first 1.5s of a fresh hold. This lets
+  // the eye register and appreciate the new crystallized shape before any
+  // motion begins. Without this, the moment of "morph done → automorphic
+  // takeover" feels like a discontinuity — shape arrives, then immediately
+  // starts becoming something else.
+  if(ui.mOn && ui.mOn.checked){
+    const phaseAge = t - (morphPhaseStart || 0);
+    if(phaseAge < 1.5) return;
+  }
+
+  const speedUI = parseInt(ui.autoSpeed.value, 10) / 100;
+  // Even at max speed (1.0) keep segments at 2.5s so drift always reads as
+  // "breathing" not "morphing". Min 12s for very slow contemplative drift.
+  driftSegLen = lerp(12.0, 2.5, speedUI);
+
+  // Re-sample at 8 Hz — CPU cost scales with particleCount so we cap frequency
+  if(t - lastHomeSample < 0.125) return;
+  lastHomeSample = t;
+
+  if(numGroups > 1){
+    // Multi-group automorphic: drift each group independently through its own
+    // family's parameter space, then rebuild the home array from all groups.
+    const liveParamsPerGroup = [];
+    let anyDrifting = false;
+    for(let g = 0; g < numGroups; g++){
+      const fam = SHAPE_FAMILIES[groupShapes[g]];
+      if(!fam || !fam.nearby || !fam.interp){
+        liveParamsPerGroup.push(groupShapeParams[g]);
+        continue;
+      }
+      anyDrifting = true;
+      // Lazy init per-group drift state
+      if(!groupDriftFrom[g]){
+        groupDriftFrom[g] = groupShapeParams[g];
+        groupDriftTo[g]   = fam.nearby(groupShapeParams[g]);
+      }
+      // Use a per-group segStart offset so groups drift out of sync (nicer)
+      const segStart = driftSegStart + g * 0.37;
+      let segT = (t - segStart) / driftSegLen;
+      segT = segT - Math.floor(segT);   // wraps as fractional part
+      if(segT < 0.01 && g === 0){
+        // When group 0 wraps we advance all groups forward
+        for(let k = 0; k < numGroups; k++){
+          const fk = SHAPE_FAMILIES[groupShapes[k]];
+          if(fk && fk.nearby && groupDriftTo[k]){
+            groupDriftFrom[k] = groupDriftTo[k];
+            groupDriftTo[k]   = fk.nearby(groupDriftTo[k]);
+          }
+        }
+        driftSegStart = t;
+      }
+      const eased = 0.5 - 0.5 * Math.cos(segT * Math.PI);
+      const live = fam.interp(groupDriftFrom[g], groupDriftTo[g], eased);
+      groupShapeParams[g] = live;
+      liveParamsPerGroup.push(live);
+    }
+    if(!anyDrifting) return;
+
+    const newHome = sampleMultiShape(
+      particleCount, particleRandoms, particleGroupIds,
+      groupShapes, liveParamsPerGroup);
+    homeTextureA.image.data.set(newHome);
+    homeTextureA.needsUpdate = true;
+    currentShapeParams = liveParamsPerGroup[0];
+    return;
+  }
+
+  // Single-shape path (original)
+  if(!currentShapeParams) return;
+  const fam = SHAPE_FAMILIES[currentShape];
+  if(!fam || !fam.nearby || !fam.interp) return;
+
+  if(!driftFromParams){
+    driftFromParams = currentShapeParams;
+    driftToParams   = fam.nearby(currentShapeParams);
+    driftSegStart   = t;
+  }
+
+  let segT = (t - driftSegStart) / driftSegLen;
+  if(segT >= 1){
+    driftFromParams = driftToParams;
+    driftToParams   = fam.nearby(driftToParams);
+    driftSegStart   = t;
+    segT = 0;
+  }
+
+  const eased = 0.5 - 0.5 * Math.cos(segT * Math.PI);
+  const liveParams = fam.interp(driftFromParams, driftToParams, eased);
+  currentShapeParams = liveParams;
+
+  const newHome = sampleShapeStable(currentShape, particleCount, particleRandoms, liveParams);
+  homeTextureA.image.data.set(newHome);
+  homeTextureA.needsUpdate = true;
+}
+
+function updateMorph(t){
+  if(!velVar) return;
+  if(!ui || !ui.mOn || !ui.mOn.checked){
+    // Morph disabled: make sure phase is 0 so particles rest crisp at their home
+    velVar.material.uniforms.uPhase.value = 0;
+    return;
+  }
+
+  const holdSec  = parseInt(ui.mHold.value,  10) / 10;
+  const transSec = parseInt(ui.mTrans.value, 10) / 10;
+  const strategy = ui.mSeq.value || 'random';
+
+  const elapsed = t - morphPhaseStart;
+
+  if(morphPhase === 'hold'){
+    // Particles are locked crisp into current shape — phase = 0.
+    // After holdSec, pick a target and begin transitioning.
+    velVar.material.uniforms.uPhase.value = 0;
+
+    if(elapsed >= holdSec){
+      const next = pickNextMorphShape(strategy);
+      regenerateHomeB(next);
+      morphPhase = 'transition';
+      morphPhaseStart = t;
+      if(ui.hudId){
+        const hex = (ui.seed.value || '00000000');
+        const curDesc = describeShape(currentShape, currentShapeParams);
+        const nextDesc = describeShape(next, targetShapeParams);
+        ui.hudId.textContent = `Expansion study [${hex}] · ${curDesc} → ${nextDesc}`;
+      }
+    }
+  } else {
+    // TRANSITION: this is where the "break apart → reform" magic happens.
+    // morphBlend animates 0 → 1 (home A → home B) linearly.
+    // uPhase animates as a BELL CURVE:
+    //    0 (crisp) → peaks at ~0.9 (chaos) mid-transition → 0 (crisp) at arrival.
+    // So: shape starts sharp, explodes outward into particle soup, then
+    // crystallizes into the new shape. Exactly the HAL rhythm.
+    const p = Math.min(1, elapsed / transSec);
+    morphBlend = p;
+    velVar.material.uniforms.uMorph.value = p;
+
+    // Bell curve: 4p(1-p) peaks at 1.0 when p=0.5
+    const bell = 4 * p * (1 - p);
+    // Scale by 0.9 so we never fully abandon the spring (particles still know where to go)
+    velVar.material.uniforms.uPhase.value = bell * 0.9;
+
+    if(p >= 1){
+      // Arrived at B. Promote B to A and rest.
+      swapHomes();
+      morphPhase = 'hold';
+      morphPhaseStart = t;
+      velVar.material.uniforms.uPhase.value = 0;   // snap back to crisp
+      if(ui.hudId){
+        const hex = (ui.seed.value || '00000000');
+        ui.hudId.textContent = `Expansion study [${hex}] · ${describeShape(currentShape, currentShapeParams)}`;
+      }
+    }
+  }
+}
+
+function triggerMorphNow(){
+  if(!ui.mOn.checked){
+    // Turn it on implicitly when user hits "force next"
+    ui.mOn.checked = true;
+  }
+  // Force immediate transition by pretending the hold just finished
+  morphPhase = 'hold';
+  morphPhaseStart = -9999;
+}
+
+// ---------- glassy shell ----------
+let shell = null;
+let shellMat = null;
+
+function buildShell(shape, palette){
+  if(shell){
+    scene.remove(shell);
+    shell.geometry.dispose();
+    shell.material.dispose();
+    shell = null; shellMat = null;
+  }
+  let geo;
+  if(shape === 'sphere')           geo = new THREE.SphereGeometry(1.7, 96, 96);
+  else if(shape === 'dome')        geo = new THREE.SphereGeometry(1.7, 96, 96, 0, Math.PI*2, 0, Math.PI*0.6);
+  else if(shape === 'torus')       geo = new THREE.TorusGeometry(1.5, 0.55, 48, 128);
+  else                             geo = new THREE.IcosahedronGeometry(1.7, 3);
+
+  // Tint matches the dominant colour the particle palette is already producing.
+  // We use palette(0.5) as a mid-tone sample.
+  const pa = palette.a, pb = palette.b, pc = palette.c, pd = palette.d;
+  const sample = (t)=> pa.map((v,i)=> v + pb[i]*Math.cos(6.28318*(pc[i]*t + pd[i])));
+  const rgb = sample(0.5);
+  const tint = new THREE.Color(Math.max(0,Math.min(1,rgb[0])), Math.max(0,Math.min(1,rgb[1])), Math.max(0,Math.min(1,rgb[2])));
+
+  shellMat = new THREE.MeshPhysicalMaterial({
+    color: tint,
+    transmission: 0.95,
+    thickness: 0.35,
+    roughness: 0.15,
+    metalness: 0.0,
+    ior: 1.33,
+    attenuationColor: tint,
+    attenuationDistance: 1.5,
+    clearcoat: 0.4,
+    clearcoatRoughness: 0.3,
+    transparent: true,
+    side: shape==='dome' ? THREE.DoubleSide : THREE.FrontSide,
+    depthWrite: false,
+  });
+
+  // Inject distortion into the shell's vertex shader — pulsing warp.
+  shellMat.userData.uTime = { value: 0 };
+  shellMat.userData.uDist = { value: 0.4 };
+  shellMat.userData.uAudio = { value: 0 };
+  shellMat.onBeforeCompile = (s)=>{
+    s.uniforms.uTime  = shellMat.userData.uTime;
+    s.uniforms.uDist  = shellMat.userData.uDist;
+    s.uniforms.uAudio = shellMat.userData.uAudio;
+    s.vertexShader = `
+      uniform float uTime;
+      uniform float uDist;
+      uniform float uAudio;
+      vec3 hash33(vec3 p){
+        p = vec3(dot(p,vec3(127.1,311.7,74.7)),
+                 dot(p,vec3(269.5,183.3,246.1)),
+                 dot(p,vec3(113.5,271.9,124.6)));
+        return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+      }
+    ` + s.vertexShader.replace(
+      '#include <begin_vertex>',
+      `
+      vec3 transformed = vec3( position );
+      vec3 n = normalize(position);
+      float t = uTime * 0.6;
+      vec3 h = hash33(position*1.2 + vec3(t*0.5,t*0.3,t*0.2));
+      float warp = (uDist + uAudio*0.5) * 0.18;
+      transformed += n * (h.x*0.5 + h.y*0.3) * warp;
+      `
+    );
+  };
+
+  shell = new THREE.Mesh(geo, shellMat);
+  scene.add(shell);
+}
+
+// ---------- post-processing ----------
+let composer, renderPass, trailPass, bloomPass, caPass, grainPass, outputPass;
+
+const CAShader = {
+  uniforms:{
+    tDiffuse:{value:null},
+    uStrength:{value:0.008},
+    uEnable:{value:1.0},
+  },
+  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader:`
+    varying vec2 vUv;
+    uniform sampler2D tDiffuse;
+    uniform float uStrength;
+    uniform float uEnable;
+    void main(){
+      if(uEnable < 0.5){
+        gl_FragColor = texture2D(tDiffuse, vUv);
+        return;
+      }
+      vec2 c = vUv - 0.5;
+      float d = dot(c,c);
+      vec2 ofs = c * d * uStrength * 20.0;
+      float r = texture2D(tDiffuse, vUv + ofs).r;
+      float g = texture2D(tDiffuse, vUv + ofs*0.4).g;
+      float b = texture2D(tDiffuse, vUv - ofs*0.2).b;
+      gl_FragColor = vec4(r,g,b,1.0);
+    }
+  `,
+};
+
+const GrainShader = {
+  uniforms:{
+    tDiffuse:{value:null},
+    uTime:{value:0},
+    uAmount:{value:0.04},
+    uEnable:{value:1.0},
+  },
+  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader:`
+    varying vec2 vUv;
+    uniform sampler2D tDiffuse;
+    uniform float uTime;
+    uniform float uAmount;
+    uniform float uEnable;
+    float ign(vec2 p){
+      return fract(52.9829189 * fract(0.06711056*p.x + 0.00583715*p.y));
+    }
+    void main(){
+      vec4 col = texture2D(tDiffuse, vUv);
+      if(uEnable > 0.5){
+        vec2 px = gl_FragCoord.xy + uTime*37.0;
+        float n = ign(px) - 0.5;
+        col.rgb += n * uAmount;
+      }
+      vec2 c = vUv - 0.5;
+      float v = 1.0 - dot(c,c)*0.8;
+      col.rgb *= v;
+      gl_FragColor = col;
+    }
+  `,
+};
+
+function buildComposer(){
+  // Use a half-float (16-bit) render target for HDR — this is what lets bright
+  // particles actually get bright (values > 1.0) before tone-mapping compresses
+  // them back. In 8-bit, bright pixels clip to white and bloom looks flat.
+  const rt = new THREE.WebGLRenderTarget(1, 1, {
+    type: THREE.HalfFloatType,
+    magFilter: THREE.LinearFilter,
+    minFilter: THREE.LinearFilter,
+    colorSpace: THREE.LinearSRGBColorSpace,
+    depthBuffer: true,
+    stencilBuffer: false,
+  });
+  composer = new EffectComposer(renderer, rt);
+  composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  renderPass = new RenderPass(scene, camera);
+  composer.addPass(renderPass);
+
+  trailPass = new AfterimagePass(0.88);
+  composer.addPass(trailPass);
+
+  // Higher strength + lower radius + higher threshold = selective HDR bloom
+  // (only the hottest particles shimmer; background stays clean)
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(1,1), 1.4, 0.42, 0.6);
+  composer.addPass(bloomPass);
+
+  caPass = new ShaderPass(CAShader);
+  composer.addPass(caPass);
+
+  grainPass = new ShaderPass(GrainShader);
+  composer.addPass(grainPass);
+
+  outputPass = new OutputPass();
+  composer.addPass(outputPass);
+}
+
+function resize(){
+  const w = stage.clientWidth;
+  const h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+  if(composer){
+    composer.setSize(w, h);
+    bloomPass.setSize(w, h);
+  }
+}
+window.addEventListener('resize', resize);
+
+// ---------- audio reactivity ----------
+const audio = {
+  enabled: false,
+  ctx: null,
+  analyser: null,
+  data: null,
+  srcNode: null,
+  mediaEl: null,
+  bass: 0, mid: 0, treble: 0,
+  amount: 1.0,
+};
+
+async function startAudio(source, fileInput){
+  stopAudio();
+  try{
+    audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.analyser = audio.ctx.createAnalyser();
+    audio.analyser.fftSize = 512;
+    audio.analyser.smoothingTimeConstant = 0.78;
+    audio.data = new Uint8Array(audio.analyser.frequencyBinCount);
+    if(source === 'mic'){
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+      audio.srcNode = audio.ctx.createMediaStreamSource(stream);
+      audio.srcNode.connect(audio.analyser);
+      // don't connect mic to destination (feedback!)
+    } else if(source === 'file' && fileInput && fileInput.files && fileInput.files[0]){
+      const url = URL.createObjectURL(fileInput.files[0]);
+      audio.mediaEl = new Audio(url);
+      audio.mediaEl.loop = true;
+      audio.mediaEl.crossOrigin = 'anonymous';
+      await audio.mediaEl.play();
+      audio.srcNode = audio.ctx.createMediaElementSource(audio.mediaEl);
+      audio.srcNode.connect(audio.analyser);
+      audio.analyser.connect(audio.ctx.destination);
+    } else {
+      throw new Error('No audio source ready');
+    }
+    audio.enabled = true;
+  } catch(e){
+    console.warn('audio start failed', e);
+    audio.enabled = false;
+    alert('Could not start audio: ' + e.message);
+  }
+}
+function stopAudio(){
+  audio.enabled = false;
+  if(audio.mediaEl){ audio.mediaEl.pause(); audio.mediaEl = null; }
+  if(audio.srcNode){ try{ audio.srcNode.disconnect(); }catch(_){} audio.srcNode = null; }
+  if(audio.ctx){ try{ audio.ctx.close(); }catch(_){} audio.ctx = null; }
+  audio.analyser = null; audio.data = null;
+  audio.bass = audio.mid = audio.treble = 0;
+}
+function sampleAudio(){
+  if(!audio.enabled || !audio.analyser) return;
+  audio.analyser.getByteFrequencyData(audio.data);
+  const n = audio.data.length;
+  let b=0, m=0, t=0;
+  const bEnd = Math.floor(n*0.08);
+  const mEnd = Math.floor(n*0.35);
+  for(let i=0;i<bEnd;i++)      b += audio.data[i];
+  for(let i=bEnd;i<mEnd;i++)   m += audio.data[i];
+  for(let i=mEnd;i<n;i++)      t += audio.data[i];
+  b = b / (bEnd*255);
+  m = m / ((mEnd-bEnd)*255);
+  t = t / ((n-mEnd)*255);
+  audio.bass   += (b - audio.bass) * 0.3;
+  audio.mid    += (m - audio.mid ) * 0.3;
+  audio.treble += (t - audio.treble) * 0.3;
+}
+
+// ---------- UI ----------
+const $ = id => document.getElementById(id);
+const panel = $('panel');
+$('menu-toggle').onclick = ()=> panel.classList.toggle('open');
+
+const ui = {
+  seed: $('seed'),
+  mode: $('mode'),
+  shape: $('shape'),
+  count: $('count'),
+  countV: $('count-v'),
+  noise: $('noise'),
+  noiseV: $('noise-v'),
+  speed: $('speed'),
+  speedV: $('speed-v'),
+  spring: $('spring'),
+  springV: $('spring-v'),
+  damping: $('damping'),
+  dampingV: $('damping-v'),
+  orbit: $('orbit'),
+  orbitV: $('orbit-v'),
+  bright: $('bright'),
+  brightV: $('bright-v'),
+  gsync: $('gsync'),
+  gsyncV: $('gsync-v'),
+  contain: $('contain'),
+  containV: $('contain-v'),
+  crisp: $('crisp'),
+  crispV: $('crisp-v'),
+  lTrail: $('l-trail'),
+  lBloom: $('l-bloom'),
+  lCA:    $('l-ca'),
+  lGrain: $('l-grain'),
+  lRot:   $('l-rotate'),
+  rand:   $('rand'),
+  lookList:   $('look-list'),
+  lookLoad:   $('look-load'),
+  lookSave:   $('look-save'),
+  lookRename: $('look-rename'),
+  lookDelete: $('look-delete'),
+  savepng:$('savepng'),
+  hudId:  $('hud-id'),
+  hudTitle: $('hud-title'),
+  // shell
+  sOn:    $('s-on'),
+  sShape: $('s-shape'),
+  sDist:  $('s-dist'),
+  sDistV: $('s-dist-v'),
+  sThick: $('s-thick'),
+  sThickV:$('s-thick-v'),
+  // morph
+  mOn:     $('m-on'),
+  mHold:   $('m-hold'),
+  mHoldV:  $('m-hold-v'),
+  mTrans:  $('m-trans'),
+  mTransV: $('m-trans-v'),
+  mSeq:    $('m-seq'),
+  mForce:  $('m-force'),
+  autoOn:    $('auto-on'),
+  autoSpeed: $('auto-speed'),
+  autoSpeedV:$('auto-speed-v'),
+  multiOn:   $('multi-on'),
+  multiN:    $('multi-n'),
+  multiNV:   $('multi-n-v'),
+  // audio
+  aOn:    $('a-on'),
+  aSrc:   $('a-src'),
+  aFileRow: $('a-file-row'),
+  aFile:  $('a-file'),
+  aAmt:   $('a-amt'),
+  aAmtV:  $('a-amt-v'),
+  // record
+  rDur:   $('r-dur'),
+  rDurV:  $('r-dur-v'),
+  rSize:  $('r-size'),
+  rFps:   $('r-fps'),
+  rAspect:$('r-aspect'),
+  rQuality:$('r-quality'),
+  rCamera:$('r-camera'),
+  rBtn:   $('record-btn'),
+  rCancel:$('rec-cancel'),
+};
+
+function fmtCount(n){
+  if(n>=1000000) return (n/1000000).toFixed(1)+'M';
+  if(n>=1000) return Math.round(n/1000)+'k';
+  return ''+n;
+}
+
+let currentPalette = PALETTES[0];
+let currentMode = MODES.classic;
+
+function applyModeToUI(mode){
+  // Push the mode's recipe values into the UI sliders so the user can see them
+  // and tweak from there. The renderAt loop reads UI values each frame.
+  ui.shape.value  = mode.shape;
+  ui.noise.value  = Math.round(mode.noise * 100);
+  ui.speed.value  = Math.round(mode.speed * 100);
+  ui.spring.value = Math.round(mode.spring * 100);
+  ui.damping.value= Math.round(mode.damping * 100);
+  ui.orbit.value  = Math.round(mode.orbit * 100);
+  ui.bright.value = Math.round(mode.brightness * 100);
+  // Mode-specific containment & group-sync (if the mode specifies them)
+  if(mode.gsync   !== undefined) ui.gsync.value   = Math.round(mode.gsync   * 100);
+  if(mode.contain !== undefined) ui.contain.value = Math.round(mode.contain * 100);
+  // Post-chain knobs — tuned per mode
+  if(trailPass) trailPass.uniforms.damp.value = mode.trail;
+  if(bloomPass) bloomPass.strength = mode.bloom;
+}
+
+function applyFromSeed(){
+  const hex = (ui.seed.value || 'd0786211').toLowerCase().replace(/[^0-9a-f]/g,'').padEnd(8,'0').slice(0,8);
+  ui.seed.value = hex;
+  seedFromHex(hex);
+
+  // RNG order matters for determinism. Keep it: palette → mode → title.
+  currentPalette = PALETTES[Math.floor(rand() * PALETTES.length)];
+  currentMode = resolveMode(ui.mode.value);
+
+  const titles = [
+    '⟨0⁺| Φ* |0⁻⟩', 'Σ(ψ) ~ Λ', '∂μ Fμν = J', '⟨φ|H|φ⟩',
+    '∮ B · dA', 'ρ → ρ′', 'Ô|n⟩ = λ|n⟩', 'Δx Δp ≥ ℏ/2',
+    '∇²Φ − m²Φ = 0', '⟨p′|Ô|p⟩', 'iℏ∂ₜψ = Ĥψ', '∫ e^(iS/ℏ) Dφ',
+    'γμ∂μψ − mψ = 0', '⟨Ω|T{φφ}|Ω⟩', 'F = dA + A∧A', '⟨AB|ρ|AB⟩',
+    'β(g) = ∂g/∂ln μ', '|ψ⟩ → U|ψ⟩', 'Tr(ρ log ρ)', '⟨J⁺ J⁻⟩ᶜ',
+  ];
+  ui.hudTitle.textContent = titles[Math.floor(rand() * titles.length)];
+  ui.hudId.textContent = `Expansion study [${hex}] (2026) · ${currentMode.name}`;
+
+  applyModeToUI(currentMode);
+  updateFromUI(); // reflect values in readouts
+
+  const count = COUNT_MAP[parseInt(ui.count.value,10)];
+  buildParticles(currentMode.shape, count, currentPalette);
+
+  if(ui.sOn && ui.sOn.checked){
+    buildShell(ui.sShape.value, currentPalette);
+  }
+}
+
+function updateFromUI(){
+  const count = COUNT_MAP[parseInt(ui.count.value,10)];
+  ui.countV.textContent = fmtCount(count);
+  const n = parseInt(ui.noise.value,10)/100;
+  ui.noiseV.textContent = n.toFixed(2);
+  const s = parseInt(ui.speed.value,10)/100;
+  ui.speedV.textContent = s.toFixed(2);
+
+  // Physics readouts
+  const sp = parseInt(ui.spring.value,10)/100;
+  const dm = parseInt(ui.damping.value,10)/100;
+  const or = parseInt(ui.orbit.value,10)/100;
+  const br = parseInt(ui.bright.value,10)/100;
+  const gs = parseInt(ui.gsync.value,10)/100;
+  const ct = parseInt(ui.contain.value,10)/100;
+  const cr = parseInt(ui.crisp.value,10)/100;
+  ui.springV.textContent  = sp.toFixed(2);
+  ui.dampingV.textContent = dm.toFixed(2);
+  ui.orbitV.textContent   = or.toFixed(2);
+  ui.brightV.textContent  = br.toFixed(2);
+  ui.gsyncV.textContent   = gs.toFixed(2);
+  ui.containV.textContent = ct.toFixed(2);
+  ui.crispV.textContent   = cr.toFixed(2);
+  // Noise, speed, spring, damping, orbit, gsync, contain apply inside the sim each frame (renderAt).
+
+  if(trailPass) trailPass.enabled = ui.lTrail.checked;
+  if(bloomPass) bloomPass.enabled = ui.lBloom.checked;
+  if(caPass)    caPass.uniforms.uEnable.value = ui.lCA.checked ? 1.0 : 0.0;
+  if(grainPass) grainPass.uniforms.uEnable.value = ui.lGrain.checked ? 1.0 : 0.0;
+  controls.autoRotate = ui.lRot.checked;
+  controls.autoRotateSpeed = 0.6;
+
+  // shell uniforms
+  const dist = parseInt(ui.sDist.value,10)/100;
+  const thick = parseInt(ui.sThick.value,10)/100;
+  ui.sDistV.textContent = dist.toFixed(2);
+  ui.sThickV.textContent = thick.toFixed(2);
+  if(shellMat){
+    shellMat.userData.uDist.value = dist;
+    shellMat.thickness = 0.05 + thick*2.0;
+    shellMat.needsUpdate = true;
+  }
+
+  // audio intensity
+  const amt = parseInt(ui.aAmt.value,10)/100;
+  ui.aAmtV.textContent = amt.toFixed(1);
+  audio.amount = amt;
+
+  // morph readouts (hold/trans sliders store deci-seconds so 25 → 2.5s)
+  if(ui.mHoldV)  ui.mHoldV.textContent  = (parseInt(ui.mHold.value, 10)/10).toFixed(1) + 's';
+  if(ui.mTransV) ui.mTransV.textContent = (parseInt(ui.mTrans.value,10)/10).toFixed(1) + 's';
+
+  // automorphic drift speed readout
+  if(ui.autoSpeedV) ui.autoSpeedV.textContent = (parseInt(ui.autoSpeed.value,10)/100).toFixed(2);
+  if(ui.multiNV)    ui.multiNV.textContent = ui.multiN.value;
+}
+
+ui.mOn && (ui.mOn.onchange = ()=>{
+  if(ui.mOn.checked){
+    morphPhase = 'hold';
+    morphPhaseStart = simPrevTime || 0;
+  }
+});
+ui.mHold && (ui.mHold.oninput = updateFromUI);
+ui.mTrans && (ui.mTrans.oninput = updateFromUI);
+ui.mForce && (ui.mForce.onclick = triggerMorphNow);
+ui.autoOn    && (ui.autoOn.onchange    = ()=>{ driftFromParams = null; driftToParams = null; });
+ui.autoSpeed && (ui.autoSpeed.oninput  = updateFromUI);
+ui.multiOn   && (ui.multiOn.onchange   = applyFromSeed);   // rebuild when toggled
+ui.multiN    && (ui.multiN.onchange    = applyFromSeed);   // rebuild when count changes
+ui.multiN    && (ui.multiN.oninput     = ()=>{ if(ui.multiNV) ui.multiNV.textContent = ui.multiN.value; });
+
+ui.mode.onchange = applyFromSeed;
+ui.shape.onchange = applyFromSeed;
+ui.count.oninput = ()=>{ ui.countV.textContent = fmtCount(COUNT_MAP[parseInt(ui.count.value,10)]); };
+ui.count.onchange = applyFromSeed;
+ui.noise.oninput = updateFromUI;
+ui.speed.oninput = updateFromUI;
+ui.spring.oninput = updateFromUI;
+ui.damping.oninput = updateFromUI;
+ui.orbit.oninput = updateFromUI;
+ui.bright.oninput = updateFromUI;
+ui.gsync.oninput = updateFromUI;
+ui.contain.oninput = updateFromUI;
+ui.crisp.oninput = updateFromUI;
+[ui.lTrail, ui.lBloom, ui.lCA, ui.lGrain, ui.lRot].forEach(el => el.onchange = updateFromUI);
+ui.seed.onchange = applyFromSeed;
+ui.rand.onclick = ()=>{
+  const chars = '0123456789abcdef';
+  let h=''; for(let i=0;i<8;i++) h += chars[Math.floor(Math.random()*16)];
+  ui.seed.value = h;
+  applyFromSeed();
+};
+ui.savepng.onclick = ()=>{
+  composer.render();
+  const a = document.createElement('a');
+  a.download = `expansion_${ui.seed.value}.png`;
+  a.href = renderer.domElement.toDataURL('image/png');
+  a.click();
+};
+
+// shell toggles
+ui.sOn.onchange = ()=>{
+  if(ui.sOn.checked){
+    buildShell(ui.sShape.value, currentPalette);
+    updateFromUI();
+  } else {
+    if(shell){
+      scene.remove(shell);
+      shell.geometry.dispose();
+      shell.material.dispose();
+      shell = null; shellMat = null;
+    }
+  }
+};
+ui.sShape.onchange = ()=>{
+  if(ui.sOn.checked){
+    buildShell(ui.sShape.value, currentPalette);
+    updateFromUI();
+  }
+};
+ui.sDist.oninput = updateFromUI;
+ui.sThick.oninput = updateFromUI;
+
+// audio toggles
+ui.aSrc.onchange = ()=>{
+  ui.aFileRow.style.display = ui.aSrc.value === 'file' ? 'flex' : 'none';
+};
+ui.aOn.onchange = async ()=>{
+  if(ui.aOn.checked){
+    await startAudio(ui.aSrc.value, ui.aFile);
+    if(!audio.enabled) ui.aOn.checked = false;
+  } else {
+    stopAudio();
+  }
+};
+ui.aFile.onchange = async ()=>{
+  if(ui.aOn.checked && ui.aSrc.value === 'file'){
+    await startAudio('file', ui.aFile);
+  }
+};
+ui.aAmt.oninput = updateFromUI;
+
+// record controls
+ui.rDur.oninput = ()=>{ ui.rDurV.textContent = ui.rDur.value + 's'; };
+ui.rBtn.onclick = startRecording;
+ui.rCancel.onclick = ()=>{ captureCancelled = true; };
+
+// ---------- boot ----------
+resize();
+buildComposer();
+applyFromSeed();
+updateFromUI();
+
+const clock = new THREE.Clock();
+
+let captureMode = false;
+let captureCancelled = false;
+let captureFps = 60;
+
+// Render one frame at explicit time t — used by both interactive and capture paths.
+function renderAt(t){
+  sampleAudio();
+  const bass = audio.enabled ? audio.bass * audio.amount : 0;
+  const mid  = audio.enabled ? audio.mid  * audio.amount : 0;
+  const treb = audio.enabled ? audio.treble * audio.amount : 0;
+
+  // Step the physics simulation. Uses a fixed timestep clamped to avoid explosions.
+  if(gpuCompute && velVar && posVar){
+    updateMorph(t);   // advances morph phase/blend if enabled
+    updateAutomorphic(t);   // drifts shape params during HOLD (automorphic continuum)
+
+    const baseNoise   = parseInt(ui.noise.value,10)/100;
+    const baseSpeed   = parseInt(ui.speed.value,10)/100;
+    const baseSpring  = parseInt(ui.spring.value,10)/100;
+    const baseDamping = parseInt(ui.damping.value,10)/100;
+    const baseOrbit   = parseInt(ui.orbit.value,10)/100;
+    const baseBright  = parseInt(ui.bright.value,10)/100;
+    const baseGsync   = parseInt(ui.gsync.value,10)/100;
+    const baseContain = parseInt(ui.contain.value,10)/100;
+    const baseCrisp   = parseInt(ui.crisp.value,10)/100;
+
+    // Fixed dt for capture determinism; clamped for interactive hiccups.
+    // In capture mode we use 1/captureFps so 30fps and 24fps recordings get
+    // correct sim-time advancement (was hardcoded 1/60 — a 12s/30fps render
+    // would have only advanced 6s of sim time).
+    let dt = captureMode
+      ? (1 / (captureFps || 60))
+      : Math.min(Math.max(t - simPrevTime, 1/240), 1/30);
+    simPrevTime = t;
+
+    velVar.material.uniforms.uDelta.value   = dt;
+    velVar.material.uniforms.uTime.value    = t;
+    velVar.material.uniforms.uNoise.value   = baseNoise + bass*0.8;
+    velVar.material.uniforms.uSpeed.value   = baseSpeed + mid*1.2;
+    velVar.material.uniforms.uSpring.value  = baseSpring;
+    // Audio nudges damping toward 1.0 (coastier) — never above 0.999
+    velVar.material.uniforms.uDamping.value = Math.min(0.999, baseDamping + mid*0.03);
+    velVar.material.uniforms.uOrbit.value   = baseOrbit;
+    velVar.material.uniforms.uPulse.value   = currentMode.pulse || 0.0;
+    velVar.material.uniforms.uGroupSync.value = baseGsync;
+    velVar.material.uniforms.uContain.value   = baseContain;
+    velVar.material.uniforms.uCrisp.value     = baseCrisp;
+
+    posVar.material.uniforms.uDelta.value   = dt;
+    posVar.material.uniforms.uTime.value    = t;
+    posVar.material.uniforms.uBreathe.value = 1.0 + bass*0.6;
+
+    gpuCompute.compute();
+
+    // Pipe the freshest textures into the render material
+    particleMat.uniforms.uPosTex.value =
+      gpuCompute.getCurrentRenderTarget(posVar).texture;
+    particleMat.uniforms.uVelTex.value =
+      gpuCompute.getCurrentRenderTarget(velVar).texture;
+    particleMat.uniforms.uTime.value = t;
+
+    // Auto-tame brightness: more particles → each one needs to be a bit dimmer
+    // so the sum doesn't blow out. sqrt scaling tracks how HDR luminance actually
+    // accumulates. Then user brightness slider + audio bass ride on top.
+    const count = posTexSize * posTexSize;
+    const ref = 100000;  // reference particle count the "natural" brightness targets
+    const countScale = Math.min(1.0, Math.sqrt(ref / Math.max(count, 1)));
+    particleMat.uniforms.uBrightness.value =
+      baseBright * countScale * (1.0 + bass*0.8);
+  }
+
+  if(shellMat){
+    shellMat.userData.uTime.value = t;
+    shellMat.userData.uAudio.value = treb + bass*0.3;
+  }
+  if(bloomPass){
+    // Bloom strength also scales with brightness setting for consistency
+    const baseBloom = currentMode.bloom || 1.4;
+    const baseBright = parseInt(ui.bright.value,10)/100;
+    bloomPass.strength = baseBloom * Math.max(0.6, baseBright) + bass*1.2;
+  }
+  if(grainPass) grainPass.uniforms.uTime.value = t;
+
+  // controls.update() applies orbit damping and auto-rotate. During capture
+  // we set the camera position manually each frame from scripted choreography;
+  // running controls.update() afterwards would overwrite our positions.
+  if(!captureMode) controls.update();
+  composer.render();
+}
+
+function tick(){
+  if(!captureMode){
+    renderAt(clock.getElapsedTime());
+    requestAnimationFrame(tick);
+  }
+}
+tick();
+
+// ---------- recording ----------
+// ---------- saved looks (seed bookmarking) ----------
+// Captures the entire visual state — seed plus every UI control — so a saved
+// look can be restored exactly. This is what preserves favorites like
+// f662b547 and 820bd92d so they don't evaporate between sessions.
+
+// Electron's renderer process does NOT support the browser's window.prompt()
+// dialog — it silently returns null. We need a custom in-HTML modal for text
+// input. This builds one on first use and reuses it.
+let _promptEl = null;
+function customPrompt(message, defaultValue){
+  return new Promise((resolve) => {
+    if(!_promptEl){
+      _promptEl = document.createElement('div');
+      _promptEl.innerHTML = `
+        <div class="cp-backdrop"></div>
+        <div class="cp-modal">
+          <div class="cp-message"></div>
+          <input type="text" class="cp-input" spellcheck="false"/>
+          <div class="cp-buttons">
+            <button class="cp-cancel">cancel</button>
+            <button class="cp-ok">OK</button>
+          </div>
+        </div>
+        <style>
+          .cp-backdrop{
+            position:fixed; inset:0; z-index:999;
+            background:rgba(0,0,0,0.55);
+            backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+          }
+          .cp-modal{
+            position:fixed; z-index:1000;
+            top:50%; left:50%; transform:translate(-50%, -50%);
+            background:#111; border:1px solid #333;
+            padding:18px 20px;
+            min-width:300px;
+            font-family:var(--mono); font-size:12px; color:var(--ink);
+          }
+          .cp-message{ margin-bottom:12px; color:var(--ink-dim); }
+          .cp-input{
+            width:100%; padding:7px 9px;
+            background:#000; color:var(--ink);
+            border:1px solid #444; border-radius:2px;
+            font-family:var(--mono); font-size:11px;
+            box-sizing:border-box;
+          }
+          .cp-input:focus{ outline:none; border-color:#888; }
+          .cp-buttons{ display:flex; gap:6px; margin-top:12px; justify-content:flex-end; }
+          .cp-buttons button{
+            padding:6px 14px;
+            background:#222; color:var(--ink);
+            border:1px solid #444; border-radius:2px;
+            font-family:var(--mono); font-size:11px;
+            cursor:pointer;
+          }
+          .cp-buttons button:hover{ background:#333; }
+          .cp-ok{ background:#2a4a7a !important; border-color:#3a5a8a !important; }
+        </style>
+      `;
+      _promptEl.style.display = 'none';
+      document.body.appendChild(_promptEl);
+    }
+    const msgEl = _promptEl.querySelector('.cp-message');
+    const inputEl = _promptEl.querySelector('.cp-input');
+    const okBtn = _promptEl.querySelector('.cp-ok');
+    const cancelBtn = _promptEl.querySelector('.cp-cancel');
+    const backdrop = _promptEl.querySelector('.cp-backdrop');
+    msgEl.textContent = message;
+    inputEl.value = defaultValue || '';
+    _promptEl.style.display = '';
+    setTimeout(() => { inputEl.focus(); inputEl.select(); }, 20);
+
+    const cleanup = (val) => {
+      _promptEl.style.display = 'none';
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+      backdrop.onclick = null;
+      inputEl.onkeydown = null;
+      resolve(val);
+    };
+    okBtn.onclick = () => cleanup(inputEl.value);
+    cancelBtn.onclick = () => cleanup(null);
+    backdrop.onclick = () => cleanup(null);
+    inputEl.onkeydown = (e) => {
+      if(e.key === 'Enter')      { e.preventDefault(); cleanup(inputEl.value); }
+      else if(e.key === 'Escape'){ e.preventDefault(); cleanup(null); }
+    };
+  });
+}
+
+// Also replace confirm() which Electron also silently refuses.
+function customConfirm(message){
+  return new Promise((resolve) => {
+    customPrompt(message + '\n\n(type "yes" to confirm)', '').then(val => {
+      resolve(val !== null && val.trim().toLowerCase() === 'yes');
+    });
+  });
+}
+
+// Snapshot the current UI state into a serializable look object.
+function captureCurrentLook(name){
+  // Grab values from every important control. Add new controls here when adding
+  // new sliders so they get saved/restored correctly.
+  const controls = {};
+  // Top-level
+  controls.seed = ui.seed.value;
+  controls.mode = ui.mode.value;
+  controls.shape = ui.shape.value;
+  controls.particles = ui.particles.value;
+  // Physics sliders
+  controls.noise = ui.noise.value;
+  controls.speed = ui.speed.value;
+  controls.spring = ui.spring.value;
+  controls.damping = ui.damping.value;
+  controls.orbit = ui.orbit.value;
+  controls.bright = ui.bright.value;
+  controls.gsync = ui.gsync.value;
+  controls.contain = ui.contain.value;
+  controls.crisp = ui.crisp.value;
+  // Layer toggles
+  controls.lTrail = ui.lTrail.checked;
+  controls.lBloom = ui.lBloom.checked;
+  controls.lCA    = ui.lCA.checked;
+  controls.lGrain = ui.lGrain.checked;
+  controls.lRot   = ui.lRot.checked;
+  // Morph
+  if(ui.mOn)    controls.mOn    = ui.mOn.checked;
+  if(ui.mHold)  controls.mHold  = ui.mHold.value;
+  if(ui.mTrans) controls.mTrans = ui.mTrans.value;
+  if(ui.mSeq)   controls.mSeq   = ui.mSeq.value;
+  // Multi-shape
+  if(ui.multiOn) controls.multiOn = ui.multiOn.checked;
+  if(ui.multiN)  controls.multiN  = ui.multiN.value;
+  // Automorphic
+  if(ui.autoOn)    controls.autoOn    = ui.autoOn.checked;
+  if(ui.autoSpeed) controls.autoSpeed = ui.autoSpeed.value;
+  // Record settings
+  if(ui.rDur)     controls.rDur     = ui.rDur.value;
+  if(ui.rSize)    controls.rSize    = ui.rSize.value;
+  if(ui.rFps)     controls.rFps     = ui.rFps.value;
+  if(ui.rAspect)  controls.rAspect  = ui.rAspect.value;
+  if(ui.rQuality) controls.rQuality = ui.rQuality.value;
+  if(ui.rCamera)  controls.rCamera  = ui.rCamera.value;
+
+  return {
+    id: 'look_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+    name: name || `${controls.seed} · ${new Date().toLocaleString()}`,
+    seed: controls.seed,
+    createdAt: Date.now(),
+    schemaVersion: 1,
+    controls,
+  };
+}
+
+// Apply a saved look back to the UI, then trigger a full rebuild.
+function applyLook(look){
+  if(!look || !look.controls) return;
+  const c = look.controls;
+  const setVal = (el, v) => { if(el && v !== undefined) el.value = v; };
+  const setChk = (el, v) => { if(el && v !== undefined) el.checked = !!v; };
+
+  setVal(ui.seed, c.seed);
+  setVal(ui.mode, c.mode);
+  setVal(ui.shape, c.shape);
+  setVal(ui.particles, c.particles);
+  setVal(ui.noise, c.noise);
+  setVal(ui.speed, c.speed);
+  setVal(ui.spring, c.spring);
+  setVal(ui.damping, c.damping);
+  setVal(ui.orbit, c.orbit);
+  setVal(ui.bright, c.bright);
+  setVal(ui.gsync, c.gsync);
+  setVal(ui.contain, c.contain);
+  setVal(ui.crisp, c.crisp);
+  setChk(ui.lTrail, c.lTrail);
+  setChk(ui.lBloom, c.lBloom);
+  setChk(ui.lCA,    c.lCA);
+  setChk(ui.lGrain, c.lGrain);
+  setChk(ui.lRot,   c.lRot);
+  setChk(ui.mOn,    c.mOn);
+  setVal(ui.mHold,  c.mHold);
+  setVal(ui.mTrans, c.mTrans);
+  setVal(ui.mSeq,   c.mSeq);
+  setChk(ui.multiOn, c.multiOn);
+  setVal(ui.multiN,  c.multiN);
+  setChk(ui.autoOn,    c.autoOn);
+  setVal(ui.autoSpeed, c.autoSpeed);
+  setVal(ui.rDur,     c.rDur);
+  setVal(ui.rSize,    c.rSize);
+  setVal(ui.rFps,     c.rFps);
+  setVal(ui.rAspect,  c.rAspect);
+  setVal(ui.rQuality, c.rQuality);
+  setVal(ui.rCamera,  c.rCamera);
+
+  // Trigger full rebuild from the loaded seed + settings
+  applyFromSeed();
+  updateFromUI();
+  // Loaded looks don't carry camera state, so snap to default framing so
+  // the user sees the shape immediately instead of having to re-orbit.
+  recenterCamera();
+}
+
+// Refresh the dropdown from disk
+async function refreshLooksDropdown(){
+  if(!window.electronAPI || !window.electronAPI.looksList) return;
+  const looks = await window.electronAPI.looksList();
+  // Rebuild <option> list, preserving selection if possible
+  const prevSelected = ui.lookList.value;
+  ui.lookList.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = looks.length === 0
+    ? '— no saved looks yet —'
+    : `— ${looks.length} saved look${looks.length===1?'':'s'} —`;
+  ui.lookList.appendChild(placeholder);
+  // Newest first
+  const sorted = [...looks].sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+  for(const look of sorted){
+    const opt = document.createElement('option');
+    opt.value = look.id;
+    opt.textContent = look.name;
+    ui.lookList.appendChild(opt);
+  }
+  if(prevSelected) ui.lookList.value = prevSelected;
+}
+
+async function saveCurrentLook(){
+  if(!window.electronAPI || !window.electronAPI.looksSave){
+    alert('Saved looks only work in the desktop app.');
+    return;
+  }
+  // Prompt for name using our custom in-HTML modal (Electron's renderer
+  // process doesn't support browser-native window.prompt() — it silently
+  // returns null, which is why the old prompt-based save "did nothing").
+  const defaultName = `${ui.seed.value} · ${new Date().toLocaleString()}`;
+  const name = await customPrompt('Name this look:', defaultName);
+  if(name === null) return;  // user cancelled
+  const look = captureCurrentLook(name || defaultName);
+  const result = await window.electronAPI.looksSave(look);
+  if(result.error){
+    alert('Could not save: ' + result.error);
+    return;
+  }
+  await refreshLooksDropdown();
+  ui.lookList.value = look.id;   // select the just-saved look
+}
+
+async function loadSelectedLook(){
+  const id = ui.lookList.value;
+  if(!id) return;
+  if(!window.electronAPI || !window.electronAPI.looksList) return;
+  const looks = await window.electronAPI.looksList();
+  const look = looks.find(l => l.id === id);
+  if(!look){ alert('Look not found.'); return; }
+  applyLook(look);
+}
+
+async function deleteSelectedLook(){
+  const id = ui.lookList.value;
+  if(!id) return;
+  const opt = ui.lookList.options[ui.lookList.selectedIndex];
+  const name = opt ? opt.textContent : id;
+  const ok = await customConfirm(`Delete "${name}"? This cannot be undone.`);
+  if(!ok) return;
+  await window.electronAPI.looksDelete(id);
+  await refreshLooksDropdown();
+}
+
+async function renameSelectedLook(){
+  const id = ui.lookList.value;
+  if(!id) return;
+  const opt = ui.lookList.options[ui.lookList.selectedIndex];
+  const currentName = opt ? opt.textContent : '';
+  const name = await customPrompt('New name:', currentName);
+  if(name === null || !name.trim()) return;
+  await window.electronAPI.looksRename({ id, name: name.trim() });
+  await refreshLooksDropdown();
+  ui.lookList.value = id;
+}
+
+// Wire UI buttons
+if(ui.lookSave)   ui.lookSave.onclick   = saveCurrentLook;
+if(ui.lookLoad)   ui.lookLoad.onclick   = loadSelectedLook;
+if(ui.lookDelete) ui.lookDelete.onclick = deleteSelectedLook;
+if(ui.lookRename) ui.lookRename.onclick = renameSelectedLook;
+// Recenter camera — snap view back to centered framing if scene looks off
+const camRecenterBtn = document.getElementById('cam-recenter');
+if(camRecenterBtn) camRecenterBtn.onclick = recenterCamera;
+// Double-click on dropdown also loads
+if(ui.lookList)   ui.lookList.ondblclick = loadSelectedLook;
+
+// Keyboard shortcut: 'B' anywhere quick-saves the current look
+window.addEventListener('keydown', (e) => {
+  // Ignore if typing in an input/textarea or if a modifier is held
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = (e.target && e.target.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if(e.key === 'b' || e.key === 'B') saveCurrentLook();
+});
+
+// Populate the dropdown at boot (after a tiny delay so electronAPI is ready)
+setTimeout(() => { refreshLooksDropdown(); }, 100);
+
+
+async function startRecording(){
+  if(captureMode) return;
+  if(!window.electronAPI){
+    alert('Recording only works in the desktop app.');
+    return;
+  }
+
+  const duration = parseInt(ui.rDur.value, 10);
+  const fps      = parseInt(ui.rFps.value, 10);
+  const baseSize = parseInt(ui.rSize.value, 10);
+  const aspect   = ui.rAspect.value || '1:1';
+  const quality  = ui.rQuality.value || 'final';
+  const cameraMode = ui.rCamera.value || 'orbit';
+  const totalFrames = Math.round(duration * fps);
+  const seed = ui.seed.value;
+
+  // Compute width × height from aspect ratio. baseSize defines the SHORT side
+  // (so "1080p" means 1080 on the short edge regardless of aspect). Except
+  // for 1:1 which is baseSize × baseSize.
+  let width, height;
+  if(aspect === '1:1')       { width = baseSize;            height = baseSize; }
+  else if(aspect === '16:9') { width = Math.round(baseSize * 16/9); height = baseSize; }
+  else if(aspect === '9:16') { width = baseSize;            height = Math.round(baseSize * 16/9); }
+  else if(aspect === '4:5')  { width = baseSize;            height = Math.round(baseSize * 5/4); }
+  else { width = baseSize; height = baseSize; }
+  // yuv420p needs even dimensions — round up if odd
+  if(width % 2 === 1) width++;
+  if(height % 2 === 1) height++;
+
+  // Show overlay
+  const overlay = $('rec-overlay');
+  const bar = $('rec-bar');
+  const pctEl = $('rec-pct');
+  const frameEl = $('rec-frame');
+  const etaEl = $('rec-eta');
+  const phaseEl = $('rec-phase');
+  overlay.classList.add('show');
+  phaseEl.textContent = 'preparing';
+
+  // Remember state so we can restore it
+  const prevSize = { w: renderer.domElement.width, h: renderer.domElement.height };
+  const prevAutoRotate = controls.autoRotate;
+  const prevDamping = controls.enableDamping;
+  const prevCameraPos = camera.position.clone();
+  const prevCameraTarget = controls.target.clone();
+  const prevPixelRatio = renderer.getPixelRatio();
+  const prevControlsEnabled = controls.enabled;
+
+  captureMode = true;
+  captureCancelled = false;
+  captureFps = fps;
+  // CRITICAL: disable controls entirely during capture. We set camera position
+  // manually each frame; if controls.update() runs inside renderAt() it will
+  // overwrite our positions and the camera drifts, causing the "shape vanishes
+  // and goes black" failure mode. We restore controls.enabled on cleanup.
+  controls.enabled = false;
+  controls.enableDamping = false;
+  controls.autoRotate = false;
+
+  // CRITICAL: force pixel ratio to 1 for capture. Without this, on HiDPI
+  // displays (DPR=1.25, 1.5, 2) the canvas backing buffer is multiplied by DPR
+  // (e.g. 1080→1350 at DPR 1.25). The composer post-process chain operates at
+  // the requested size but the particle render goes to the inflated buffer →
+  // mismatch → most of the scene renders black.
+  renderer.setPixelRatio(1);
+
+  // Auto-recenter camera before every record. No matter what the user did
+  // interactively (zoomed in tight, orbited off-screen, panned), recording
+  // starts from the default centered pose. This eliminates the "camera is
+  // inside the scene → black frames" failure mode entirely.
+  recenterCamera();
+
+  // Resize renderer to target size — we render offscreen at capture res
+  renderer.setSize(width, height, false);
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  if(composer){ composer.setSize(width, height); composer.setPixelRatio(1); }
+  if(bloomPass) bloomPass.setSize(width, height);
+
+  // Let shaders compile at new size
+  await new Promise(r => setTimeout(r, 300));
+
+  // Sim warm-up — step the simulation 60 frames BEFORE recording frame 0.
+  // This lets particles settle into their shape from initial positions, so
+  // frame 0 starts from a crystallized state instead of a spring-up transient.
+  // We temporarily disable morph during warmup so the morph state machine
+  // doesn't tick while we're just trying to settle physics — otherwise a
+  // short hold could fire a transition mid-warmup and frame 0 would catch
+  // particles mid-explosion.
+  phaseEl.textContent = 'warming up simulation';
+  const morphWasOn = ui.mOn ? ui.mOn.checked : false;
+  if(ui.mOn) ui.mOn.checked = false;
+  const autoWasOn = ui.autoOn ? ui.autoOn.checked : false;
+  if(ui.autoOn) ui.autoOn.checked = false;
+
+  for(let i = 0; i < 60; i++){
+    const warmT = i / fps;   // small positive time
+    renderAt(warmT);
+    if(i % 10 === 0) await new Promise(r => setTimeout(r, 0));
+  }
+
+  // Re-enable morph / automorphic if they were on
+  if(ui.mOn)    ui.mOn.checked = morphWasOn;
+  if(ui.autoOn) ui.autoOn.checked = autoWasOn;
+
+  // Reset sim time and morph phase so frame 0 of capture starts from t=0
+  // in a fresh HOLD phase.
+  simPrevTime = 0;
+  morphPhase = 'hold';
+  morphPhaseStart = 0;
+
+  // Ask main process to start a recording session
+  const session = await window.electronAPI.startRecording({
+    seed, size: baseSize, fps, totalFrames,
+    width, height, aspect, quality,
+  });
+  if(!session || session.error){
+    overlay.classList.remove('show');
+    captureMode = false;
+    controls.enabled = prevControlsEnabled;
+    renderer.setPixelRatio(prevPixelRatio);
+    renderer.setSize(prevSize.w, prevSize.h, false);
+    alert('Could not start recording: ' + (session?.error || 'unknown'));
+    return;
+  }
+  phaseEl.textContent = 'rendering frames (' + quality + ', ' + width + 'x' + height + ')';
+
+  // Camera choreography setup. Record starting camera state so we can script.
+  const target = controls.target.clone();
+  const startOffset = new THREE.Vector3().subVectors(camera.position, target);
+  const startSpherical = new THREE.Spherical().setFromVector3(startOffset);
+
+  // Defensive fallback: if the camera is inside the scene (radius too small)
+  // or somewhere bizarre, reset to a known-good starting pose. This prevents
+  // "rendered an all-black video because camera was at origin" failures.
+  // Our default scene is ~ 2.0 units in radius (containment sphere 1.8 + halo).
+  // A camera closer than 2.5 is likely inside the show.
+  if(startSpherical.radius < 2.5 || !isFinite(startSpherical.radius)){
+    console.warn('[record] camera radius was too small (' + startSpherical.radius.toFixed(3) + '), resetting to default 5.0');
+    startSpherical.radius = 5.0;
+    startSpherical.phi = Math.PI / 2;     // look at equator
+    startSpherical.theta = 0;
+    target.set(0, 0, 0);                   // target scene origin
+    // Also update the live camera immediately so frame 0 is correct
+    const defaultOffset = new THREE.Vector3().setFromSpherical(startSpherical);
+    camera.position.copy(target).add(defaultOffset);
+    camera.lookAt(target);
+  }
+  console.log('[record] startSpherical', {
+    radius: startSpherical.radius.toFixed(3),
+    phi: startSpherical.phi.toFixed(3),
+    theta: startSpherical.theta.toFixed(3),
+    target: target.toArray().map(v=>v.toFixed(3))
+  });
+
+  const t0 = Date.now();
+  let frame;
+  for(frame = 0; frame < totalFrames; frame++){
+    if(captureCancelled) break;
+    const t = frame / fps;
+    const tNorm = frame / Math.max(totalFrames - 1, 1);  // [0, 1] through the whole render
+
+    // Camera choreography — compute camera position for this frame.
+    // We DO NOT read camera.position back (which would compound errors); we
+    // always rebuild the spherical from the saved startSpherical.
+    const spherical = new THREE.Spherical(
+      startSpherical.radius, startSpherical.phi, startSpherical.theta);
+
+    if(cameraMode === 'orbit'){
+      spherical.theta += tNorm * Math.PI * 2 * 0.6;
+    } else if(cameraMode === 'still'){
+      // Leave at start — no movement
+    } else if(cameraMode === 'push'){
+      const eased = tNorm * tNorm * (3 - 2*tNorm);
+      spherical.radius = startSpherical.radius * lerp(1.3, 0.85, eased);
+      spherical.theta += tNorm * Math.PI * 0.25;
+    } else if(cameraMode === 'cinematic'){
+      // Slow continuous arc over full duration — shape is the star.
+      // Camera does ONE smooth gimbal arc: gentle 90° orbit with a slight
+      // phi dip-and-recover and a slow push-pull on radius.
+      const e = tNorm;
+      const smooth = e*e*(3 - 2*e);
+      spherical.theta += smooth * Math.PI * 0.5;
+      spherical.phi = startSpherical.phi + Math.sin(e * Math.PI) * 0.12;
+      // Push in through the first half, pull back slightly in second half
+      const rMul = 0.9 - Math.sin(e * Math.PI) * 0.18;
+      spherical.radius = startSpherical.radius * rMul;
+    } else { // sync — sub-phase-aware morph choreography
+      // This is the real HAL-style move. We track WHERE we are within the
+      // current phase (hold or transition) and interpolate camera state
+      // through a keyframed timeline that mirrors the morph state machine:
+      //
+      //   HOLD begin  → camera at 1.05× distance, slight orbit
+      //   HOLD mid    → pushes in to 0.85× distance, orbit slows
+      //   HOLD end    → holds steady (anticipation)
+      //   TRANS begin → pulls back hard to 1.25× distance, phi dips
+      //   TRANS mid   → swings 35° around, phi recovers
+      //   TRANS end   → settles at startRadius, ready for next hold
+      //
+      // Sub-phase progress: how far through the current hold/transition are we?
+      const holdSec  = (parseInt(ui.mHold.value, 10) || 30) / 10;   // UI stores deci-seconds
+      const transSec = (parseInt(ui.mTrans.value, 10) || 30) / 10;
+      const phaseAge = Math.max(0, t - (morphPhaseStart || 0));
+      const phaseSec = (morphPhase === 'transition') ? transSec : holdSec;
+      const subT = Math.min(1, phaseAge / Math.max(phaseSec, 0.1));   // [0,1] within current phase
+
+      // Cosine ease between keyframe values for the current phase
+      const ease = (a, b, u) => lerp(a, b, 0.5 - 0.5 * Math.cos(u * Math.PI));
+
+      // Continuous accumulating rotation (always progressing) independent of phase
+      const baseTheta = t * 0.12;
+
+      if(morphPhase === 'hold'){
+        // Radius: start slightly back (1.05), push in to 0.82 by mid-hold, settle at 0.85
+        let radMul;
+        if(subT < 0.5)  radMul = ease(1.05, 0.82, subT / 0.5);
+        else            radMul = ease(0.82, 0.85, (subT - 0.5) / 0.5);
+        spherical.radius = startSpherical.radius * radMul;
+        // Phi: gentle dip and recovery — very subtle
+        spherical.phi = startSpherical.phi + Math.sin(subT * Math.PI) * 0.05;
+        // Theta: slow orbit that decelerates toward hold end (anticipation)
+        const orbitRate = ease(0.35, 0.10, subT);
+        spherical.theta += baseTheta + subT * orbitRate;
+      } else {
+        // Transition phase — dramatic move
+        // Radius: pull back hard immediately (1.28), hold, then settle back to 0.95
+        let radMul;
+        if(subT < 0.3)       radMul = ease(0.85, 1.28, subT / 0.3);
+        else if(subT < 0.7)  radMul = 1.28;
+        else                 radMul = ease(1.28, 0.95, (subT - 0.7) / 0.3);
+        spherical.radius = startSpherical.radius * radMul;
+        // Phi: dips ~12° during chaos, recovers
+        spherical.phi = startSpherical.phi - Math.sin(subT * Math.PI) * 0.21;
+        // Theta: accelerates hard (35° swing through the transition)
+        const swing = ease(0, Math.PI * 0.19, subT);
+        spherical.theta += baseTheta + swing;
+      }
+    }
+
+    const offset = new THREE.Vector3().setFromSpherical(spherical);
+    camera.position.copy(target).add(offset);
+    camera.lookAt(target);
+
+    renderAt(t);
+
+    // Capture frame. PNG for final quality, JPEG (smaller/faster) for draft.
+    const mime = quality === 'final' ? 'image/png' : 'image/jpeg';
+    const q = quality === 'final' ? undefined : 0.95;
+    const blob = await new Promise(res => renderer.domElement.toBlob(res, mime, q));
+    if(!blob){
+      console.error('toBlob returned null at frame', frame);
+      captureCancelled = true;
+      break;
+    }
+    const buf = await blob.arrayBuffer();
+
+    // On frame 0, sample the JUST-ENCODED IMAGE (not the GL buffer) to
+    // detect all-black output. We decode the blob back to an ImageBitmap
+    // and read pixels from that — this is what actually got saved to disk,
+    // not a potentially-invalidated framebuffer. This catches genuine
+    // failure modes (camera pointing nowhere, post-fx killed everything)
+    // while avoiding false positives from GL buffer timing issues.
+    if(frame === 0){
+      try {
+        const img = await createImageBitmap(blob);
+        const c = document.createElement('canvas');
+        c.width = img.width; c.height = img.height;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        // Sample a larger, off-center patch: 128x128 at 25%,25% (avoids
+        // false positives from scenes where center is intentionally dark)
+        const patchSize = 128;
+        const sx = Math.floor(img.width * 0.25);
+        const sy = Math.floor(img.height * 0.25);
+        const data = ctx.getImageData(sx, sy, patchSize, patchSize).data;
+        let maxLum = 0;
+        let sumLum = 0;
+        for(let i = 0; i < data.length; i += 4){
+          const lum = data[i] + data[i+1] + data[i+2];
+          sumLum += lum;
+          if(lum > maxLum) maxLum = lum;
+        }
+        const avgLum = sumLum / (patchSize * patchSize);
+        console.log('[record] frame 0 brightness → max:', maxLum, 'avg:', avgLum.toFixed(2));
+        // Only abort if the ENTIRE 128x128 off-center patch is nearly pitch black.
+        // "max lum < 8" means no pixel in the sampled area has sum R+G+B over 8/765 ≈ 1%.
+        // That's a real all-black render, not just a dark region.
+        if(maxLum < 8){
+          captureCancelled = true;
+          phaseEl.textContent = 'ERROR: scene is all black — aborting';
+          console.error('[record] Scene rendered all-black. Camera:', {
+            pos: camera.position.toArray(),
+            target: controls.target.toArray(),
+            startRadius: startSpherical.radius
+          });
+          await new Promise(r => setTimeout(r, 100));
+          alert('Recording produced black frames. Click "⊙ recenter camera" in the Saved Looks panel, then try recording again. If this keeps happening, the brightness slider may be at zero or the scene may not have loaded properly.');
+          break;
+        }
+      } catch(e){
+        console.warn('[record] black-frame check failed (non-fatal):', e);
+      }
+    }
+
+    const ok = await window.electronAPI.saveFrame({
+      sessionId: session.sessionId,
+      frameIndex: frame,
+      data: buf,
+      format: quality === 'final' ? 'png' : 'jpg',
+    });
+    if(!ok || ok.error){
+      console.error('frame save failed', ok);
+      captureCancelled = true;
+      break;
+    }
+
+    // update UI
+    const pct = ((frame+1)/totalFrames*100);
+    bar.style.width = pct.toFixed(1)+'%';
+    pctEl.textContent = pct.toFixed(0)+'%';
+    frameEl.textContent = `frame ${frame+1} / ${totalFrames}`;
+    const elapsed = (Date.now()-t0)/1000;
+    const fpsNow = (frame+1)/elapsed;
+    const etaSec = Math.max(0, (totalFrames-frame-1)/Math.max(fpsNow,0.01));
+    etaEl.textContent = 'eta ' + formatTime(etaSec);
+
+    // Yield so the browser doesn't freeze (redraw the overlay)
+    if(frame % 4 === 0) await new Promise(r => setTimeout(r, 0));
+  }
+
+  if(captureCancelled){
+    phaseEl.textContent = 'cancelled, cleaning up';
+    await window.electronAPI.cancelRecording({ sessionId: session.sessionId });
+  } else {
+    phaseEl.textContent = 'encoding mp4 with ffmpeg...';
+    bar.style.width = '100%';
+    pctEl.textContent = '100%';
+
+    const result = await window.electronAPI.finishRecording({ sessionId: session.sessionId });
+    if(result.ok){
+      phaseEl.textContent = 'saved to ' + result.path.split(/[/\\]/).pop();
+      await new Promise(r => setTimeout(r, 1800));
+    } else {
+      phaseEl.textContent = 'encode failed: ' + (result.error || 'unknown');
+      await new Promise(r => setTimeout(r, 4000));
+    }
+  }
+
+  // restore interactive mode
+  overlay.classList.remove('show');
+  captureMode = false;
+  controls.enabled = prevControlsEnabled;
+  controls.autoRotate = prevAutoRotate;
+  controls.enableDamping = prevDamping;
+  camera.position.copy(prevCameraPos);
+  controls.target.copy(prevCameraTarget);
+  camera.lookAt(prevCameraTarget);
+  renderer.setPixelRatio(prevPixelRatio);
+  if(composer) composer.setPixelRatio(prevPixelRatio);
+  resize();
+  tick();
+}
+
+function formatTime(s){
+  if(!isFinite(s) || s < 0) return '–';
+  if(s < 60) return Math.round(s)+'s';
+  const m = Math.floor(s/60), sec = Math.round(s%60);
+  return `${m}m${sec.toString().padStart(2,'0')}s`;
+}
+</script>
+</body>
+</html>

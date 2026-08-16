@@ -1,0 +1,143 @@
+/* ============================================================
+   Expansion Study — Effects
+   ------------------------------------------------------------
+   Tokenized from the existing identity. Glass panels over void.
+   Blur-backed surfaces. Custom slider/checkbox styling.
+   Sharp radii. Instant transitions.
+   ============================================================ */
+
+:root {
+  /* ── Radii — near-sharp, code-editor feel ── */
+  --radius-none: 0;
+  --radius-xs:   1px;
+  --radius-sm:   2px;
+  --radius-md:   4px;
+  --radius-full: 999px;
+
+  /* ── Glass ── */
+  --blur-panel:  blur(14px);
+  --blur-heavy:  blur(24px);
+
+  /* ── Motion — quick, technical ── */
+  --ease-panel:  cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-quick:   160ms;
+  --dur-panel:   320ms;
+}
+
+/* ── Glass panel (the signature surface) ── */
+.ex-panel {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  -webkit-backdrop-filter: var(--blur-panel);
+  backdrop-filter: var(--blur-panel);
+}
+
+/* ── HUD (fixed overlay elements) ── */
+.ex-hud-br { position: fixed; z-index: 10; pointer-events: none; right: 14px; bottom: 12px; font-style: italic; }
+.ex-hud-bl { position: fixed; z-index: 10; pointer-events: none; left: 14px; bottom: 12px; }
+.ex-hud-tl { position: fixed; z-index: 10; pointer-events: none; left: 14px; top: 12px; }
+
+/* ── Toggle button (menu trigger) ── */
+.ex-toggle {
+  width: 34px; height: 34px;
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  -webkit-backdrop-filter: var(--blur-panel);
+  backdrop-filter: var(--blur-panel);
+  color: var(--text-body);
+  font-family: var(--font-mono);
+  font-size: 16px; line-height: 32px; text-align: center;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+}
+
+/* ── Slide panel (sidebar / settings drawer) ── */
+.ex-slide-panel {
+  background: var(--panel);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  backdrop-filter: var(--blur-heavy);
+  border-left: 1px solid var(--edge);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform var(--dur-panel) var(--ease-panel);
+}
+.ex-slide-panel.open { transform: translateX(0); }
+
+/* ── Control group ── */
+.ex-group {
+  border-bottom: 1px solid var(--edge);
+}
+.ex-group:last-child { border-bottom: none; }
+.ex-group-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Range slider (the primary control) ── */
+.ex-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 16px;
+  flex: 1.4;
+}
+.ex-slider::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--edge);
+}
+.ex-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px; height: 10px;
+  background: var(--text-body);
+  margin-top: -5px;
+  border-radius: var(--radius-none);
+  cursor: pointer;
+}
+
+/* ── Checkbox ── */
+.ex-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 28px; height: 16px;
+  background: rgba(235, 230, 220, 0.08);
+  border: 1px solid var(--edge);
+  position: relative;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  flex: 0 0 auto;
+}
+.ex-checkbox:checked {
+  background: var(--edge-active);
+}
+.ex-checkbox::before {
+  content: "";
+  position: absolute;
+  width: 10px; height: 10px;
+  top: 2px; left: 2px;
+  background: #000;
+  transition: transform 0.16s;
+}
+.ex-checkbox:checked::before {
+  transform: translateX(12px);
+  background: #111;
+}
+
+/* ── Stage (full-bleed canvas container) ── */
+.ex-stage {
+  position: fixed;
+  inset: 0;
+  width: 100%; height: 100%;
+  touch-action: none;
+}
+.ex-stage canvas { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

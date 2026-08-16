@@ -1,0 +1,41 @@
+/* ============================================================
+   Expansion Study — Base reset
+   Void ground, ink text, JetBrains Mono body.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;  /* creative-coding default — canvas fills */
+  background: var(--void);
+  color: var(--text-body);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-mono);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2, h3, h4, p { margin: 0; }
+
+::selection {
+  background: rgba(235, 230, 220, 0.18);
+  color: var(--text-strong);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

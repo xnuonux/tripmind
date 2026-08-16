@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+  <meta name="theme-color" content="#000000"/>
+  <title>TRIPMIND — the field</title>
+  <meta name="description" content="A chamber for watching mathematics become visible. Fourteen engines. Fifty-two compositions. Easy and deep."/>
+  <link rel="stylesheet" href="css/app.css"/>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="fatal" hidden></div>
+
+<div id="splash"><div class="t">tripmind</div></div>
+
+<div class="hud hud-tl">
+  <span class="brand">tripmind</span>
+  <span class="sub">the field</span>
+</div>
+<div class="hud hud-bl">drag to orbit · scroll to zoom</div>
+<div class="hud hud-br">
+  <b id="hud-engine">warp</b> · <span id="hud-seed">00000000</span><br>
+  <span id="hud-fps">–</span> fps
+</div>
+
+<div id="chrome">
+  <div class="seg">
+    <button id="mode-easy" class="on">easy</button>
+    <button id="mode-deep">deep</button>
+  </div>
+  <button class="ghost" id="gallery-btn">presets</button>
+  <button class="ghost" id="hide-btn" title="hide ui (H)">hide</button>
+  <button class="ghost" id="fs-btn">full</button>
+</div>
+
+<div id="dock">
+  <div id="preset-family">still</div>
+  <div class="preset-row">
+    <button class="nav" id="prev" aria-label="previous preset">‹</button>
+    <div id="preset-name">Pale Ember</div>
+    <button class="nav" id="next" aria-label="next preset">›</button>
+  </div>
+  <div id="preset-line">A coal that decided not to become a fire.</div>
+  <div class="sliders">
+    <div class="sl"><label>intensity</label><input id="intensity" type="range" min="0" max="1" step="0.01"><span class="v" id="intensity-v">.55</span></div>
+    <div class="sl"><label>tempo</label><input id="tempo" type="range" min="0" max="1" step="0.01"><span class="v" id="tempo-v">.48</span></div>
+    <div class="sl"><label>heat</label><input id="heat" type="range" min="0" max="1" step="0.01"><span class="v" id="heat-v">.58</span></div>
+    <div class="sl"><label>bloom</label><input id="bloom" type="range" min="0" max="1" step="0.01"><span class="v" id="bloom-v">.52</span></div>
+  </div>
+  <div class="acts">
+    <button id="still-btn" class="prim">still</button>
+    <button id="still4k-btn">still 4k</button>
+    <button id="clip8">8s clip</button>
+    <button id="clip15">15s clip</button>
+    <button id="mic-btn">mic</button>
+    <label class="file">audio<input id="a-file" type="file" accept="audio/*"></label>
+  </div>
+  <div class="seedrow">
+    <input id="seed" maxlength="8" spellcheck="false" value="820bd92d"/>
+    <button id="rand">new seed</button>
+  </div>
+  <div class="keys">← → presets · space pause · E deep · G gallery · S still · R clip · N seed · H hide · F full</div>
+</div>
+
+<aside id="deep">
+  <h2>tripmind</h2>
+  <div class="sub">deep instrument</div>
+
+  <div class="group">
+    <div class="gt">engine</div>
+    <div class="row"><label>primary</label><select id="d-engine"></select></div>
+    <div class="row"><label>secondary</label><select id="d-engineB"></select></div>
+    <div class="row"><label>mix</label><input id="d-mix" type="range" min="0" max="1" step="0.01"><span class="val" id="d-mix-v">.50</span></div>
+    <div class="tip">fourteen theorems. hybrid interpolates primary warp against the secondary engine. field is the particle manifold.</div>
+  </div>
+
+  <div class="group">
+    <div class="gt">manifold (field)</div>
+    <div class="row"><label>shape</label><select id="d-shape"></select></div>
+    <div class="row"><label>particles</label><input id="d-particles" type="range" min="0" max="3" step="1"><span class="val" id="d-particles-v">2</span></div>
+    <div class="row"><label>spring</label><input id="d-spring" type="range" min="0" max="3" step="0.01"><span class="val" id="d-spring-v">1.25</span></div>
+    <div class="row"><label>orbit</label><input id="d-orbit" type="range" min="0" max="1" step="0.01"><span class="val" id="d-orbit-v">.16</span></div>
+    <div class="row"><label>morph</label><input id="d-morph" type="range" min="0" max="1" step="0.01"><span class="val" id="d-morph-v">.00</span></div>
+  </div>
+
+  <div class="group">
+    <div class="gt">geometry of the plane</div>
+    <div class="row"><label>kaleid</label><input id="d-kaleid" type="range" min="0" max="1" step="0.01"><span class="val" id="d-kaleid-v">.00</span></div>
+    <div class="row"><label>segments</label><input id="d-segments" type="range" min="2" max="32" step="1"><span class="val" id="d-segments-v">6</span></div>
+    <div class="row"><label>warp</label><input id="d-warp" type="range" min="0" max="1" step="0.01"><span class="val" id="d-warp-v">.42</span></div>
+    <div class="row"><label>noise</label><input id="d-noise" type="range" min="0" max="1" step="0.01"><span class="val" id="d-noise-v">.38</span></div>
+  </div>
+
+  <div class="group">
+    <div class="gt">color / post</div>
+    <div class="row"><label>palette</label><select id="d-palette"></select></div>
+    <div class="row"><label>trails</label><input id="d-trail" type="range" min="0" max="0.97" step="0.01"><span class="val" id="d-trail-v">.84</span></div>
+    <div class="row"><label>grain</label><input id="d-grain" type="range" min="0" max="0.4" step="0.01"><span class="val" id="d-grain-v">.10</span></div>
+    <div class="row"><label>aberration</label><input id="d-ca" type="range" min="0" max="1" step="0.01"><span class="val" id="d-ca-v">.32</span></div>
+    <div class="row"><label>crt</label><input id="d-crt" type="range" min="0" max="1" step="0.01"><span class="val" id="d-crt-v">.00</span></div>
+    <div class="row"><label>auto-rotate</label><input id="d-rotate" type="checkbox" checked></div>
+  </div>
+
+  <div class="group">
+    <div class="gt">render — stills &amp; video</div>
+    <div class="row">
+      <label>aspect</label>
+      <select id="r-aspect">
+        <option value="16:9">16:9</option>
+        <option value="1:1" selected>1:1</option>
+        <option value="9:16">9:16</option>
+        <option value="4:5">4:5</option>
+        <option value="21:9">21:9</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>long edge</label>
+      <select id="r-size">
+        <option value="1080">1080</option>
+        <option value="1440">1440</option>
+        <option value="1920" selected>1920</option>
+        <option value="2160">2160 (4K)</option>
+        <option value="3840">3840</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>fps</label>
+      <select id="r-fps">
+        <option value="24">24</option>
+        <option value="30">30</option>
+        <option value="60" selected>60</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>duration</label>
+      <input id="r-dur" type="range" min="4" max="30" step="1" value="12">
+      <span class="val" id="r-dur-v">12s</span>
+    </div>
+    <button class="act" id="still-btn-deep" onclick="document.getElementById('still-btn').click()">save still</button>
+    <button class="act prim" id="record-btn">● record clip</button>
+    <div class="tip">easy mode still / 8s / 15s uses these aspect and size settings. video is webm or mp4 depending on the browser. hide the UI (H) before a still if you want a clean frame — HUD is DOM, never baked.</div>
+  </div>
+</aside>
+
+<div id="gallery">
+  <button class="ghost" id="gallery-close">close</button>
+  <h2>compositions</h2>
+  <div class="lead">sixty-one finished looks. still water to the unnameable.</div>
+  <div id="gallery-list"></div>
+</div>
+
+<div id="rec-overlay">
+  <div class="rec-inner">
+    <div class="rec-label">recording</div>
+    <div class="rec-progress"><div id="rec-bar"></div></div>
+    <div class="rec-stats">
+      <span id="rec-pct">0%</span>
+      <span id="rec-time">0s / 0s</span>
+    </div>
+    <div id="rec-phase">capturing the field</div>
+    <button class="ghost" id="rec-cancel">cancel</button>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

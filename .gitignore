@@ -1,0 +1,14 @@
+.DS_Store
+Thumbs.db
+desktop.ini
+node_modules/
+dist/
+*.log
+.idea/
+.vscode/
+.env
+.env.*
+captures/
+*.webm
+*.mp4
+!studio/**
