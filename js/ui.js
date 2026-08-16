@@ -294,5 +294,12 @@ export function bindUI(ctx) {
   });
 
   paint();
-  return { paint, goPreset };
+  return {
+    paint,
+    goPreset,
+    setDeep(v) { deep = !!v; paint(); },
+    getDeep: () => deep,
+    hideUI() { document.body.classList.add('ui-hidden'); },
+    showUI() { document.body.classList.remove('ui-hidden'); },
+  };
 }

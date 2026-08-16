@@ -2,6 +2,8 @@ import { Renderer } from './renderer.js';
 import { makeState, persist } from './state.js';
 import { sampleAudio } from './audio.js';
 import { bindUI } from './ui.js';
+import { attachAPI } from './api.js';
+import { startBridgeClient } from './bridge-client.js';
 
 const canvas = document.getElementById('c');
 const renderer = new Renderer(canvas);
@@ -11,6 +13,8 @@ const get = () => state;
 const set = (next) => { state = next; persist(state); };
 
 const ui = bindUI({ get, set, renderer });
+const api = attachAPI({ get, set, renderer, ui });
+startBridgeClient(api);
 
 function fit() {
   const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
@@ -67,4 +71,4 @@ requestAnimationFrame(loop);
 // fade the title splash
 requestAnimationFrame(() => document.body.classList.add('awake'));
 
-window.TRIPMIND = { get, set, renderer, ui };
+// window.TRIPMIND is owned by attachAPI

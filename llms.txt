@@ -1,0 +1,22 @@
+# TRIPMIND
+
+> A WebGL2 visualizer. Humans play it. Agents drive it.
+
+TRIPMIND is a chamber for watching mathematics become visible. Fourteen engines (field, kaleid, warp, abyss, phosphor, lattice, soliton, iris, prism, filament, orbital, hopf, klein, hybrid). Sixty-one named compositions. Easy mode is four sliders. Deep mode is the observatory.
+
+## For agents
+
+Docs: /AGENTS.md
+Discovery: /agent.json
+Catalog (static): /agent/catalog.json
+Schema (static): /agent/schema.json
+Live JS: window.TRIPMIND  (help, describe, exec, applyPreset, setState, still)
+postMessage: {type:"tripmind", id, cmd, args} → {type:"tripmind:result", id, ok, data}
+Local HTTP: POST http://127.0.0.1:8765/v1/cmd   {cmd, args}
+MCP: node agent/mcp.mjs  (requires node agent/bridge.mjs + an open tab)
+
+Always describe() before you change anything. Prefer presets over raw fields. hide() before a clean still. Seed is 8 hex chars and deterministic.
+
+## Commands
+
+help, schema, catalog, describe, get, set, preset, next, prev, engine, seed, randomize, play, pause, toggle, camera, still, video, hide, show, deep, easy, gallery, url, save, looks, load

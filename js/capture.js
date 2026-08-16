@@ -35,6 +35,8 @@ export async function captureStill(renderer, state, opts = {}) {
     aspect = '16:9',
     longEdge = 1920,
     format = 'image/png',
+    download = true,
+    as = 'blob',
   } = opts;
   const [w, h] = sizeFor(aspect, longEdge);
   const prevW = renderer.canvas.clientWidth || renderer.w;
@@ -43,9 +45,23 @@ export async function captureStill(renderer, state, opts = {}) {
   renderer.resize(w, h, 1);
   renderer.frame(1 / 60, state, { bass: 0, mid: 0, treble: 0 });
   const blob = await canvasToBlob(renderer.canvas, format, 0.95);
-  downloadBlob(blob, `${stamp(state)}.${format === 'image/jpeg' ? 'jpg' : 'png'}`);
+  const name = `${stamp(state)}.${format === 'image/jpeg' ? 'jpg' : 'png'}`;
+  if (download) downloadBlob(blob, name);
   renderer.resize(prevW, prevH, prevD);
+  if (as === 'dataurl') {
+    const data = await blobToDataURL(blob);
+    return { name, mime: blob.type, width: w, height: h, data };
+  }
   return blob;
+}
+
+function blobToDataURL(blob) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
 }
 
 function pickMime() {
@@ -116,11 +132,13 @@ export async function captureVideo(renderer, state, opts = {}, hooks = {}) {
   rec.stop();
   const blob = await done;
   const ext = mime.includes('mp4') ? 'mp4' : 'webm';
-  if (!hooks.cancelled?.()) {
-    downloadBlob(blob, `${stamp(state)}-${duration}s-${longEdge}p.${ext}`);
+  const name = `${stamp(state)}-${duration}s-${longEdge}p.${ext}`;
+  const download = opts.download !== false;
+  if (!hooks.cancelled?.() && download) {
+    downloadBlob(blob, name);
   }
   renderer.resize(prevW, prevH, prevD);
   renderer.paused = prevPaused;
-  hooks.onDone?.({ blob, cancelled: !!hooks.cancelled?.() });
+  hooks.onDone?.({ blob, cancelled: !!hooks.cancelled?.(), name });
   return blob;
 }

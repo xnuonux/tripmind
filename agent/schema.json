@@ -1,0 +1,259 @@
+{
+  "protocol": "tripmind/v1",
+  "version": "1.1.0",
+  "fields": {
+    "engine": {
+      "type": "enum",
+      "values": [
+        "field",
+        "kaleid",
+        "warp",
+        "abyss",
+        "phosphor",
+        "lattice",
+        "soliton",
+        "iris",
+        "prism",
+        "filament",
+        "orbital",
+        "hopf",
+        "klein",
+        "hybrid"
+      ],
+      "meaning": "primary renderer / theorem"
+    },
+    "engineB": {
+      "type": "enum",
+      "values": [
+        "field",
+        "kaleid",
+        "warp",
+        "abyss",
+        "phosphor",
+        "lattice",
+        "soliton",
+        "iris",
+        "prism",
+        "filament",
+        "orbital",
+        "hopf",
+        "klein",
+        "hybrid"
+      ],
+      "meaning": "secondary engine for hybrid / mix"
+    },
+    "seed": {
+      "type": "hex",
+      "length": 8,
+      "meaning": "deterministic world seed"
+    },
+    "preset": {
+      "type": "string",
+      "meaning": "composition id"
+    },
+    "intensity": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "how hard the field insists"
+    },
+    "tempo": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "time constant"
+    },
+    "heat": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "saturation / fever"
+    },
+    "bloom": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "HDR halo on hot parts"
+    },
+    "kaleid": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "dihedral fold mix"
+    },
+    "segments": {
+      "type": "int",
+      "min": 2,
+      "max": 32,
+      "meaning": "kaleidoscope fold count D_n"
+    },
+    "warpAmt": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "domain-warp amplitude"
+    },
+    "noise": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "noise / curl amount"
+    },
+    "trail": {
+      "type": "number",
+      "min": 0,
+      "max": 0.97,
+      "meaning": "video-feedback persistence"
+    },
+    "grain": {
+      "type": "number",
+      "min": 0,
+      "max": 0.4,
+      "meaning": "IGN film grain"
+    },
+    "ca": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "radial chromatic aberration"
+    },
+    "crt": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "CRT curvature + aperture grille"
+    },
+    "palette": {
+      "type": "int",
+      "min": 0,
+      "max": 29,
+      "meaning": "IQ cosine palette index"
+    },
+    "paletteShift": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "phase along the palette"
+    },
+    "contrast": {
+      "type": "number",
+      "min": 0.5,
+      "max": 2,
+      "meaning": "grade contrast"
+    },
+    "exposure": {
+      "type": "number",
+      "min": 0.4,
+      "max": 2,
+      "meaning": "grade exposure"
+    },
+    "fov": {
+      "type": "number",
+      "min": 0.6,
+      "max": 2,
+      "meaning": "field of view / zoom feel"
+    },
+    "shape": {
+      "type": "enum",
+      "values": [
+        "superformula",
+        "torusknot",
+        "lissajous",
+        "attractor",
+        "sphericalharmonic",
+        "torus",
+        "sphere",
+        "rings",
+        "knot",
+        "disc",
+        "helix",
+        "cube",
+        "cloud"
+      ],
+      "meaning": "particle manifold (field engine)"
+    },
+    "particles": {
+      "type": "int",
+      "min": 0,
+      "max": 3,
+      "meaning": "particle count level 16k–102k"
+    },
+    "spring": {
+      "type": "number",
+      "min": 0,
+      "max": 3,
+      "meaning": "spring-to-home stiffness"
+    },
+    "damping": {
+      "type": "number",
+      "min": 0.5,
+      "max": 0.995,
+      "meaning": "velocity keep"
+    },
+    "orbit": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "shared angular momentum"
+    },
+    "morph": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "shape-morph amount (field)"
+    },
+    "mix": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "hybrid mix toward engineB"
+    },
+    "audioOn": {
+      "type": "bool",
+      "meaning": "audio reactivity armed"
+    },
+    "audioAmt": {
+      "type": "number",
+      "min": 0,
+      "max": 2,
+      "meaning": "audio modulation depth"
+    },
+    "autoRotate": {
+      "type": "bool",
+      "meaning": "camera / field auto-rotate"
+    }
+  },
+  "defaults": {
+    "engine": "warp",
+    "engineB": "kaleid",
+    "seed": "820bd92d",
+    "preset": "pale-ember",
+    "intensity": 0.55,
+    "tempo": 0.48,
+    "heat": 0.58,
+    "bloom": 0.52,
+    "kaleid": 0,
+    "segments": 6,
+    "warpAmt": 0.42,
+    "noise": 0.38,
+    "trail": 0.84,
+    "grain": 0.1,
+    "ca": 0.32,
+    "crt": 0,
+    "palette": 4,
+    "paletteShift": 0,
+    "contrast": 1.06,
+    "exposure": 1.05,
+    "fov": 1.12,
+    "shape": "superformula",
+    "particles": 2,
+    "spring": 1.25,
+    "damping": 0.945,
+    "orbit": 0.16,
+    "morph": 0,
+    "mix": 0.5,
+    "audioOn": false,
+    "audioAmt": 1,
+    "autoRotate": true
+  }
+}

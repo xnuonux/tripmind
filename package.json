@@ -5,5 +5,11 @@
   "description": "TRIPMIND — a chamber for watching mathematics become visible",
   "type": "module",
   "license": "MIT",
-  "author": "xnuonux"
+  "author": "xnuonux",
+  "scripts": {
+    "start": "node agent/bridge.mjs",
+    "bridge": "node agent/bridge.mjs",
+    "mcp": "node agent/mcp.mjs",
+    "catalog": "node agent/write-catalog.mjs"
+  }
 }

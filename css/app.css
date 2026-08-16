@@ -303,6 +303,18 @@ body.ui-hidden #dock,
 body.ui-hidden #chrome,
 body.ui-hidden #deep { opacity: 0 !important; pointer-events: none; }
 
+#agent-dot {
+  position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+  z-index: 25; pointer-events: none;
+  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-dim); opacity: 0; transition: opacity 200ms;
+}
+body.agent-live #agent-dot { opacity: 1; }
+#agent-dot::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 8px;
+  background: #cde; box-shadow: 0 0 10px #cde; vertical-align: middle;
+}
+
 @media (max-width: 640px) {
   .sliders { grid-template-columns: 1fr; }
   #preset-name { font-size: 22px; }

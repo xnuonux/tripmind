@@ -1,0 +1,1186 @@
+{
+  "protocol": "tripmind/v1",
+  "version": "1.1.0",
+  "engines": [
+    {
+      "id": "field"
+    },
+    {
+      "id": "kaleid"
+    },
+    {
+      "id": "warp"
+    },
+    {
+      "id": "abyss"
+    },
+    {
+      "id": "phosphor"
+    },
+    {
+      "id": "lattice"
+    },
+    {
+      "id": "soliton"
+    },
+    {
+      "id": "iris"
+    },
+    {
+      "id": "prism"
+    },
+    {
+      "id": "filament"
+    },
+    {
+      "id": "orbital"
+    },
+    {
+      "id": "hopf"
+    },
+    {
+      "id": "klein"
+    },
+    {
+      "id": "hybrid"
+    }
+  ],
+  "shapes": [
+    {
+      "id": "superformula"
+    },
+    {
+      "id": "torusknot"
+    },
+    {
+      "id": "lissajous"
+    },
+    {
+      "id": "attractor"
+    },
+    {
+      "id": "sphericalharmonic"
+    },
+    {
+      "id": "torus"
+    },
+    {
+      "id": "sphere"
+    },
+    {
+      "id": "rings"
+    },
+    {
+      "id": "knot"
+    },
+    {
+      "id": "disc"
+    },
+    {
+      "id": "helix"
+    },
+    {
+      "id": "cube"
+    },
+    {
+      "id": "cloud"
+    }
+  ],
+  "palettes": [
+    {
+      "index": 0,
+      "id": "gold-blue",
+      "name": "gold / blue"
+    },
+    {
+      "index": 1,
+      "id": "red-violet",
+      "name": "red / violet"
+    },
+    {
+      "index": 2,
+      "id": "ice",
+      "name": "ice"
+    },
+    {
+      "index": 3,
+      "id": "ember",
+      "name": "ember"
+    },
+    {
+      "index": 4,
+      "id": "amber",
+      "name": "amber"
+    },
+    {
+      "index": 5,
+      "id": "cyan-magenta",
+      "name": "cyan / magenta"
+    },
+    {
+      "index": 6,
+      "id": "candy",
+      "name": "candy"
+    },
+    {
+      "index": 7,
+      "id": "sunset",
+      "name": "sunset"
+    },
+    {
+      "index": 8,
+      "id": "lava",
+      "name": "lava"
+    },
+    {
+      "index": 9,
+      "id": "deep-sea",
+      "name": "deep sea"
+    },
+    {
+      "index": 10,
+      "id": "aurora",
+      "name": "aurora"
+    },
+    {
+      "index": 11,
+      "id": "nebula",
+      "name": "nebula"
+    },
+    {
+      "index": 12,
+      "id": "bone",
+      "name": "bone"
+    },
+    {
+      "index": 13,
+      "id": "graphite",
+      "name": "graphite"
+    },
+    {
+      "index": 14,
+      "id": "paper",
+      "name": "paper"
+    },
+    {
+      "index": 15,
+      "id": "chlorophyll",
+      "name": "chlorophyll"
+    },
+    {
+      "index": 16,
+      "id": "blood-gold",
+      "name": "blood / gold"
+    },
+    {
+      "index": 17,
+      "id": "ultraviolet",
+      "name": "ultraviolet"
+    },
+    {
+      "index": 18,
+      "id": "foil",
+      "name": "holographic foil"
+    },
+    {
+      "index": 19,
+      "id": "opel",
+      "name": "opalescent"
+    },
+    {
+      "index": 20,
+      "id": "virus",
+      "name": "virus"
+    },
+    {
+      "index": 21,
+      "id": "cinder",
+      "name": "cinder"
+    },
+    {
+      "index": 22,
+      "id": "saint",
+      "name": "saint"
+    },
+    {
+      "index": 23,
+      "id": "void-pink",
+      "name": "void pink"
+    },
+    {
+      "index": 24,
+      "id": "mercury",
+      "name": "mercury"
+    },
+    {
+      "index": 25,
+      "id": "saffron",
+      "name": "saffron night"
+    },
+    {
+      "index": 26,
+      "id": "teal-bone",
+      "name": "teal / bone"
+    },
+    {
+      "index": 27,
+      "id": "royal",
+      "name": "royal"
+    },
+    {
+      "index": 28,
+      "id": "acid",
+      "name": "acid"
+    },
+    {
+      "index": 29,
+      "id": "white-hole",
+      "name": "white hole"
+    }
+  ],
+  "families": [
+    {
+      "id": "still",
+      "label": "still",
+      "hint": "quietly bland → tender"
+    },
+    {
+      "id": "vivid",
+      "label": "vivid",
+      "hint": "saturated, architectural"
+    },
+    {
+      "id": "sacred",
+      "label": "sacred",
+      "hint": "geometry as theology"
+    },
+    {
+      "id": "quantum",
+      "label": "quantum",
+      "hint": "orbitals, fibers, limits"
+    },
+    {
+      "id": "abyss",
+      "label": "abyss",
+      "hint": "transcendent / unnameable"
+    },
+    {
+      "id": "keeper",
+      "label": "keeper",
+      "hint": "canonical seeds"
+    }
+  ],
+  "aspects": [
+    "16:9",
+    "1:1",
+    "9:16",
+    "4:5",
+    "21:9"
+  ],
+  "presets": [
+    {
+      "id": "pale-ember",
+      "name": "Pale Ember",
+      "family": "still",
+      "line": "A coal that decided not to become a fire.",
+      "seed": "a18e3c01",
+      "engine": "warp"
+    },
+    {
+      "id": "quiet-snow",
+      "name": "Quiet Snow",
+      "family": "still",
+      "line": "Ice remembering it was once a wavefunction.",
+      "seed": "c0ffee11",
+      "engine": "field"
+    },
+    {
+      "id": "graphite-drift",
+      "name": "Graphite Drift",
+      "family": "still",
+      "line": "Pencil lead, thinking.",
+      "seed": "5a5a5a5a",
+      "engine": "warp"
+    },
+    {
+      "id": "morning-film",
+      "name": "Morning Film",
+      "family": "still",
+      "line": "A standing wave that woke up kind.",
+      "seed": "b00b1e55",
+      "engine": "lattice"
+    },
+    {
+      "id": "soft-iris",
+      "name": "Soft Iris",
+      "family": "still",
+      "line": "The first eye, before it learned hunger.",
+      "seed": "11e11e11",
+      "engine": "iris"
+    },
+    {
+      "id": "dust-orbit",
+      "name": "Dust Orbit",
+      "family": "still",
+      "line": "Kepler, if Kepler had been a moth.",
+      "seed": "6175d2f9",
+      "engine": "field"
+    },
+    {
+      "id": "paper-moon",
+      "name": "Paper Moon",
+      "family": "still",
+      "line": "Four folds. A lantern. Nothing behind it.",
+      "seed": "e4e4e401",
+      "engine": "kaleid"
+    },
+    {
+      "id": "still-water",
+      "name": "Still Water",
+      "family": "still",
+      "line": "Laplace, held. The pond has not been dropped.",
+      "seed": "0a0a7ea1",
+      "engine": "warp"
+    },
+    {
+      "id": "ash-garden",
+      "name": "Ash Garden",
+      "family": "still",
+      "line": "Filaments after the fire has forgotten them.",
+      "seed": "a5b6c7d8",
+      "engine": "filament"
+    },
+    {
+      "id": "ivory-lattice",
+      "name": "Ivory Lattice",
+      "family": "still",
+      "line": "Chladni, in bone.",
+      "seed": "fadedace",
+      "engine": "lattice"
+    },
+    {
+      "id": "low-tide",
+      "name": "Low Tide",
+      "family": "still",
+      "line": "Phosphor left on the glass when the sea went home.",
+      "seed": "7ea7ea70",
+      "engine": "phosphor"
+    },
+    {
+      "id": "candle-smoke",
+      "name": "Candle Smoke",
+      "family": "still",
+      "line": "Curl noise as prayer.",
+      "seed": "cadd1e01",
+      "engine": "field"
+    },
+    {
+      "id": "amber-cathedral",
+      "name": "Amber Cathedral",
+      "family": "vivid",
+      "line": "Eight naves. Light that got lost on purpose.",
+      "seed": "ca7hedr1",
+      "engine": "kaleid"
+    },
+    {
+      "id": "cyan-hive",
+      "name": "Cyan Hive",
+      "family": "vivid",
+      "line": "A dodecagon that learned to breed.",
+      "seed": "c1a0b1ee",
+      "engine": "kaleid"
+    },
+    {
+      "id": "velvet-orbit",
+      "name": "Velvet Orbit",
+      "family": "vivid",
+      "line": "Angular momentum, dressed.",
+      "seed": "ve1ve701",
+      "engine": "field"
+    },
+    {
+      "id": "copper-filament",
+      "name": "Copper Filament",
+      "family": "vivid",
+      "line": "Dielectric breakdown in a metal that remembers blood.",
+      "seed": "c0pper99",
+      "engine": "filament"
+    },
+    {
+      "id": "tide-pool",
+      "name": "Tide Pool",
+      "family": "vivid",
+      "line": "Turing, left in a rock at noon.",
+      "seed": "71de9001",
+      "engine": "soliton"
+    },
+    {
+      "id": "neon-relic",
+      "name": "Neon Relic",
+      "family": "vivid",
+      "line": "Thin-film physics wearing a nightclub.",
+      "seed": "ne0nre11",
+      "engine": "prism"
+    },
+    {
+      "id": "glass-hive",
+      "name": "Glass Hive",
+      "family": "vivid",
+      "line": "Iridescence trapped in a hexagon.",
+      "seed": "61a55e01",
+      "engine": "prism"
+    },
+    {
+      "id": "polar-rose",
+      "name": "Polar Rose",
+      "family": "vivid",
+      "line": "r = cos(kθ). The oldest flower in analysis.",
+      "seed": "r05e7a1e",
+      "engine": "iris"
+    },
+    {
+      "id": "magenta-sun",
+      "name": "Magenta Sun",
+      "family": "vivid",
+      "line": "A star that chose the wrong end of the spectrum and stayed.",
+      "seed": "ff00aa11",
+      "engine": "warp"
+    },
+    {
+      "id": "plasma-crown",
+      "name": "Plasma Crown",
+      "family": "vivid",
+      "line": "A sphere breathing on a 1.2 Hz throne.",
+      "seed": "p1a5ma01",
+      "engine": "field"
+    },
+    {
+      "id": "electric-hive",
+      "name": "Electric Hive",
+      "family": "vivid",
+      "line": "Aurora, organized.",
+      "seed": "e1ec7r1c",
+      "engine": "kaleid"
+    },
+    {
+      "id": "crimson-tunnel",
+      "name": "Crimson Tunnel",
+      "family": "vivid",
+      "line": "A hyperbolic throat. Do not look back.",
+      "seed": "cr1m50n1",
+      "engine": "kaleid"
+    },
+    {
+      "id": "ultraviolet-garden",
+      "name": "Ultraviolet Garden",
+      "family": "vivid",
+      "line": "Bee-vision of a Turing meadow.",
+      "seed": "u178a001",
+      "engine": "soliton"
+    },
+    {
+      "id": "hyperfoil",
+      "name": "Hyperfoil",
+      "family": "vivid",
+      "line": "Constructive interference wearing every wavelength at once.",
+      "seed": "f011f011",
+      "engine": "prism"
+    },
+    {
+      "id": "acid-cathedral",
+      "name": "Acid Cathedral",
+      "family": "vivid",
+      "line": "The nave is a domain warp. The altar is a fold.",
+      "seed": "ac1dca7h",
+      "engine": "kaleid"
+    },
+    {
+      "id": "solar-wound",
+      "name": "Solar Wound",
+      "family": "vivid",
+      "line": "A gyroid cut open. Heat pouring out of a hole in R³.",
+      "seed": "501ar000",
+      "engine": "abyss"
+    },
+    {
+      "id": "vesica",
+      "name": "Vesica",
+      "family": "sacred",
+      "line": "Two circles. The first door. Every cathedral is this intersection, scaled.",
+      "seed": "ve51ca00",
+      "engine": "iris"
+    },
+    {
+      "id": "phyllotaxis",
+      "name": "Phyllotaxis",
+      "family": "sacred",
+      "line": "n · 2π · φ⁻². The sunflower is a theorem that learned to eat light.",
+      "seed": "ph1110ta",
+      "engine": "iris"
+    },
+    {
+      "id": "sephirot",
+      "name": "Sephirot",
+      "family": "sacred",
+      "line": "Ten emanations. The tree is a graph. The light is a path integral.",
+      "seed": "5eph1r07",
+      "engine": "iris"
+    },
+    {
+      "id": "mandorla",
+      "name": "Mandorla",
+      "family": "sacred",
+      "line": "The almond of light around a body that is not there.",
+      "seed": "mand0r1a",
+      "engine": "prism"
+    },
+    {
+      "id": "metatron",
+      "name": "Metatron",
+      "family": "sacred",
+      "line": "Thirteen circles. The cube that contains every platonic solid as a rumor.",
+      "seed": "me7a7r0n",
+      "engine": "lattice"
+    },
+    {
+      "id": "gnosis",
+      "name": "Gnosis",
+      "family": "sacred",
+      "line": "Knowledge as a standing wave inside a skull-shaped potential.",
+      "seed": "6n051500",
+      "engine": "orbital"
+    },
+    {
+      "id": "hydrogen-3d",
+      "name": "Hydrogen 3d",
+      "family": "quantum",
+      "line": "Y₃₂. The electron is not a point. It is a cathedral of probability.",
+      "seed": "h3d3d3d3",
+      "engine": "orbital"
+    },
+    {
+      "id": "hopf-fibration",
+      "name": "Hopf Fibration",
+      "family": "quantum",
+      "line": "S³ → S². Every circle is a fiber. Every color is a point on the base.",
+      "seed": "h0pf1ber",
+      "engine": "hopf"
+    },
+    {
+      "id": "bloch-garden",
+      "name": "Bloch Garden",
+      "family": "quantum",
+      "line": "A qubit precessing until the sphere grows flowers.",
+      "seed": "b10ch000",
+      "engine": "hopf"
+    },
+    {
+      "id": "path-integral",
+      "name": "Path Integral",
+      "family": "quantum",
+      "line": "Sum over histories. The particle took every road. This is the interference.",
+      "seed": "pa7h1n7e",
+      "engine": "filament"
+    },
+    {
+      "id": "kleinian",
+      "name": "Kleinian Limit",
+      "family": "quantum",
+      "line": "Infinite inversions. A group of Möbius maps dreaming a dust.",
+      "seed": "k1e1n1an",
+      "engine": "klein"
+    },
+    {
+      "id": "apollonian",
+      "name": "Apollonian",
+      "family": "quantum",
+      "line": "Descartes’ circle theorem, reciting itself until there is no room left for God.",
+      "seed": "ap0110n1",
+      "engine": "klein"
+    },
+    {
+      "id": "spinor-hymn",
+      "name": "Spinor Hymn",
+      "family": "quantum",
+      "line": "A 4π rotation to come home. The universe is double-covered and singing.",
+      "seed": "5p1n0r00",
+      "engine": "hopf"
+    },
+    {
+      "id": "godhead",
+      "name": "Godhead",
+      "family": "abyss",
+      "line": "Sixteen folds. Gold so bright it becomes a name.",
+      "seed": "60dhead1",
+      "engine": "iris"
+    },
+    {
+      "id": "afterdeath",
+      "name": "Afterdeath",
+      "family": "abyss",
+      "line": "A mandelbox, cooling. The last orbit of a soul that finished its calculation.",
+      "seed": "af7erdea",
+      "engine": "abyss"
+    },
+    {
+      "id": "the-fold",
+      "name": "The Fold",
+      "family": "abyss",
+      "line": "Domain warping until space admits it was never flat.",
+      "seed": "7hef01d0",
+      "engine": "warp"
+    },
+    {
+      "id": "white-hole",
+      "name": "White Hole",
+      "family": "abyss",
+      "line": "The time-reverse of collapse. Everything leaving.",
+      "seed": "wh17eh01",
+      "engine": "abyss"
+    },
+    {
+      "id": "seraphim",
+      "name": "Seraphim",
+      "family": "abyss",
+      "line": "Six wings of a superformula. Particles as feathers of probability.",
+      "seed": "5eraph1m",
+      "engine": "field"
+    },
+    {
+      "id": "aeon",
+      "name": "Aeon",
+      "family": "abyss",
+      "line": "Gray-Scott, given a century. The plane invents organs, then religions.",
+      "seed": "ae0n0001",
+      "engine": "soliton"
+    },
+    {
+      "id": "null-communion",
+      "name": "Null Communion",
+      "family": "abyss",
+      "line": "A grayscale mandelbox. The sacrament is the absence of hue.",
+      "seed": "nu11c0mm",
+      "engine": "abyss"
+    },
+    {
+      "id": "chrysanthemum-bomb",
+      "name": "Chrysanthemum Bomb",
+      "family": "abyss",
+      "line": "Twenty-four petals. The flower that ends the world politely.",
+      "seed": "chry50m1",
+      "engine": "iris"
+    },
+    {
+      "id": "ten-thousand-eyes",
+      "name": "Ten Thousand Eyes",
+      "family": "abyss",
+      "line": "Kaleidoscope 32. Argus, solved in polar coordinates.",
+      "seed": "10000e1e",
+      "engine": "kaleid"
+    },
+    {
+      "id": "the-last-color",
+      "name": "The Last Color",
+      "family": "abyss",
+      "line": "Thin film at the end of the spectrum. After this, only geometry.",
+      "seed": "1a57c010",
+      "engine": "prism"
+    },
+    {
+      "id": "omega-iris",
+      "name": "Omega Iris",
+      "family": "abyss",
+      "line": "The last eye. It is looking at the function that made it.",
+      "seed": "0mega1r1",
+      "engine": "iris"
+    },
+    {
+      "id": "unnameable",
+      "name": "Unnameable",
+      "family": "abyss",
+      "line": "Hybrid chaos. The machine refuses a single theorem.",
+      "seed": "unnamed0",
+      "engine": "hybrid"
+    },
+    {
+      "id": "event-horizon",
+      "name": "Event Horizon",
+      "family": "abyss",
+      "line": "Photon sphere as a CRT. The last image, burned into glass.",
+      "seed": "even7h0r",
+      "engine": "abyss"
+    },
+    {
+      "id": "seraph-lattice",
+      "name": "Seraph Lattice",
+      "family": "abyss",
+      "line": "Chladni figures, promoted to angels.",
+      "seed": "5eraph1a",
+      "engine": "lattice"
+    },
+    {
+      "id": "publication",
+      "name": "Publication",
+      "family": "keeper",
+      "line": "The seed that proved a machine could mint a world.",
+      "seed": "820bd92d",
+      "engine": "field"
+    },
+    {
+      "id": "continuum-keeper",
+      "name": "Continuum",
+      "family": "keeper",
+      "line": "Gielis, holding still, then becoming the next integer of itself.",
+      "seed": "387f5a14",
+      "engine": "field"
+    },
+    {
+      "id": "nested",
+      "name": "Nested",
+      "family": "keeper",
+      "line": "A knot around a harmonic around a rose.",
+      "seed": "352ae812",
+      "engine": "field"
+    },
+    {
+      "id": "lissajous-hold",
+      "name": "Lissajous Hold",
+      "family": "keeper",
+      "line": "Standing waves in 3-space. Tesla’s favorite ghost.",
+      "seed": "f662b547",
+      "engine": "field"
+    },
+    {
+      "id": "classic-ring",
+      "name": "Classic Ring",
+      "family": "keeper",
+      "line": "The first proof. A torus, taking itself seriously.",
+      "seed": "6175d2f9",
+      "engine": "field"
+    },
+    {
+      "id": "phosphor-oracle",
+      "name": "Phosphor Oracle",
+      "family": "keeper",
+      "line": "Maxwell’s equations, misread as prophecy, on a curved glass.",
+      "seed": "0rac1e39",
+      "engine": "phosphor"
+    }
+  ],
+  "commands": [
+    {
+      "cmd": "help",
+      "args": {},
+      "returns": "this catalog",
+      "about": "discover every verb. start here."
+    },
+    {
+      "cmd": "schema",
+      "args": {},
+      "returns": "state field schema",
+      "about": "types, ranges, meaning of every knob."
+    },
+    {
+      "cmd": "catalog",
+      "args": {
+        "family": "optional"
+      },
+      "returns": "presets + engines + palettes",
+      "about": "what can be asked for by name."
+    },
+    {
+      "cmd": "describe",
+      "args": {},
+      "returns": "current look as prose + json",
+      "about": "read the chamber. use this before you touch it."
+    },
+    {
+      "cmd": "get",
+      "args": {},
+      "returns": "full state object",
+      "about": "raw state snapshot."
+    },
+    {
+      "cmd": "set",
+      "args": {
+        "...fields": "partial"
+      },
+      "returns": "describe()",
+      "about": "patch any state fields. unknown keys ignored."
+    },
+    {
+      "cmd": "preset",
+      "args": {
+        "id": "godhead"
+      },
+      "returns": "describe()",
+      "about": "load a named composition. id from catalog."
+    },
+    {
+      "cmd": "next",
+      "args": {},
+      "returns": "describe()",
+      "about": "next composition in the 61."
+    },
+    {
+      "cmd": "prev",
+      "args": {},
+      "returns": "describe()",
+      "about": "previous composition."
+    },
+    {
+      "cmd": "engine",
+      "args": {
+        "name": "hopf",
+        "b": "optional engineB"
+      },
+      "returns": "describe()",
+      "about": "switch primary (and optional secondary) engine."
+    },
+    {
+      "cmd": "seed",
+      "args": {
+        "hex": "60dhead1"
+      },
+      "returns": "describe()",
+      "about": "set 8-char hex seed. omit hex to randomize."
+    },
+    {
+      "cmd": "randomize",
+      "args": {},
+      "returns": "describe()",
+      "about": "new seed, same composition."
+    },
+    {
+      "cmd": "play",
+      "args": {},
+      "returns": "{paused:false}"
+    },
+    {
+      "cmd": "pause",
+      "args": {},
+      "returns": "{paused:true}"
+    },
+    {
+      "cmd": "toggle",
+      "args": {},
+      "returns": "{paused}"
+    },
+    {
+      "cmd": "camera",
+      "args": {
+        "theta": 0,
+        "phi": 0,
+        "dist": 6.4
+      },
+      "returns": "camera",
+      "about": "orbit camera. any subset of theta/phi/dist."
+    },
+    {
+      "cmd": "still",
+      "args": {
+        "aspect": "1:1",
+        "longEdge": 1920,
+        "download": true,
+        "as": "blob|dataurl"
+      },
+      "returns": "blob or {name,mime,width,height,data}",
+      "about": "render a still. as=dataurl for agents that cannot take a blob."
+    },
+    {
+      "cmd": "video",
+      "args": {
+        "aspect": "1:1",
+        "longEdge": 1080,
+        "duration": 8,
+        "fps": 60,
+        "download": true
+      },
+      "returns": "blob",
+      "about": "realtime clip. the tab must stay visible."
+    },
+    {
+      "cmd": "hide",
+      "args": {},
+      "returns": "{ui:false}",
+      "about": "hide chrome for a clean capture."
+    },
+    {
+      "cmd": "show",
+      "args": {},
+      "returns": "{ui:true}"
+    },
+    {
+      "cmd": "deep",
+      "args": {
+        "on": true
+      },
+      "returns": "{deep}",
+      "about": "open/close the observatory."
+    },
+    {
+      "cmd": "gallery",
+      "args": {
+        "on": true
+      },
+      "returns": "{gallery}"
+    },
+    {
+      "cmd": "url",
+      "args": {
+        "full": false
+      },
+      "returns": "{url}",
+      "about": "shareable URL of the current look."
+    },
+    {
+      "cmd": "save",
+      "args": {
+        "name": "optional"
+      },
+      "returns": "look",
+      "about": "bookmark current look to localStorage."
+    },
+    {
+      "cmd": "looks",
+      "args": {},
+      "returns": "saved looks"
+    },
+    {
+      "cmd": "load",
+      "args": {
+        "id": "look-id"
+      },
+      "returns": "describe()"
+    },
+    {
+      "cmd": "deleteLook",
+      "args": {
+        "id": "look-id"
+      },
+      "returns": "{ok}"
+    }
+  ],
+  "fields": {
+    "engine": {
+      "type": "enum",
+      "values": [
+        "field",
+        "kaleid",
+        "warp",
+        "abyss",
+        "phosphor",
+        "lattice",
+        "soliton",
+        "iris",
+        "prism",
+        "filament",
+        "orbital",
+        "hopf",
+        "klein",
+        "hybrid"
+      ],
+      "meaning": "primary renderer / theorem"
+    },
+    "engineB": {
+      "type": "enum",
+      "values": [
+        "field",
+        "kaleid",
+        "warp",
+        "abyss",
+        "phosphor",
+        "lattice",
+        "soliton",
+        "iris",
+        "prism",
+        "filament",
+        "orbital",
+        "hopf",
+        "klein",
+        "hybrid"
+      ],
+      "meaning": "secondary engine for hybrid / mix"
+    },
+    "seed": {
+      "type": "hex",
+      "length": 8,
+      "meaning": "deterministic world seed"
+    },
+    "preset": {
+      "type": "string",
+      "meaning": "composition id"
+    },
+    "intensity": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "how hard the field insists"
+    },
+    "tempo": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "time constant"
+    },
+    "heat": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "saturation / fever"
+    },
+    "bloom": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "HDR halo on hot parts"
+    },
+    "kaleid": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "dihedral fold mix"
+    },
+    "segments": {
+      "type": "int",
+      "min": 2,
+      "max": 32,
+      "meaning": "kaleidoscope fold count D_n"
+    },
+    "warpAmt": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "domain-warp amplitude"
+    },
+    "noise": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "noise / curl amount"
+    },
+    "trail": {
+      "type": "number",
+      "min": 0,
+      "max": 0.97,
+      "meaning": "video-feedback persistence"
+    },
+    "grain": {
+      "type": "number",
+      "min": 0,
+      "max": 0.4,
+      "meaning": "IGN film grain"
+    },
+    "ca": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "radial chromatic aberration"
+    },
+    "crt": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "CRT curvature + aperture grille"
+    },
+    "palette": {
+      "type": "int",
+      "min": 0,
+      "max": 29,
+      "meaning": "IQ cosine palette index"
+    },
+    "paletteShift": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "phase along the palette"
+    },
+    "contrast": {
+      "type": "number",
+      "min": 0.5,
+      "max": 2,
+      "meaning": "grade contrast"
+    },
+    "exposure": {
+      "type": "number",
+      "min": 0.4,
+      "max": 2,
+      "meaning": "grade exposure"
+    },
+    "fov": {
+      "type": "number",
+      "min": 0.6,
+      "max": 2,
+      "meaning": "field of view / zoom feel"
+    },
+    "shape": {
+      "type": "enum",
+      "values": [
+        "superformula",
+        "torusknot",
+        "lissajous",
+        "attractor",
+        "sphericalharmonic",
+        "torus",
+        "sphere",
+        "rings",
+        "knot",
+        "disc",
+        "helix",
+        "cube",
+        "cloud"
+      ],
+      "meaning": "particle manifold (field engine)"
+    },
+    "particles": {
+      "type": "int",
+      "min": 0,
+      "max": 3,
+      "meaning": "particle count level 16k–102k"
+    },
+    "spring": {
+      "type": "number",
+      "min": 0,
+      "max": 3,
+      "meaning": "spring-to-home stiffness"
+    },
+    "damping": {
+      "type": "number",
+      "min": 0.5,
+      "max": 0.995,
+      "meaning": "velocity keep"
+    },
+    "orbit": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "shared angular momentum"
+    },
+    "morph": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "shape-morph amount (field)"
+    },
+    "mix": {
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "meaning": "hybrid mix toward engineB"
+    },
+    "audioOn": {
+      "type": "bool",
+      "meaning": "audio reactivity armed"
+    },
+    "audioAmt": {
+      "type": "number",
+      "min": 0,
+      "max": 2,
+      "meaning": "audio modulation depth"
+    },
+    "autoRotate": {
+      "type": "bool",
+      "meaning": "camera / field auto-rotate"
+    }
+  }
+}

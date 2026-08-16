@@ -1,0 +1,36 @@
+{
+  "name": "TRIPMIND",
+  "description": "A chamber for watching mathematics become visible. Visualizer with a first-class agent control plane.",
+  "version": "1.1.0",
+  "protocol": "tripmind/v1",
+  "homepage": "https://github.com/xnuonux/tripmind",
+  "docs": {
+    "agents": "AGENTS.md",
+    "llms": "llms.txt",
+    "catalog": "agent/catalog.json",
+    "schema": "agent/schema.json",
+    "human": "README.md"
+  },
+  "runtime": {
+    "window": "window.TRIPMIND",
+    "postMessage": {
+      "in": { "type": "tripmind", "id": "string", "cmd": "string", "args": "object" },
+      "out": { "type": "tripmind:result", "id": "string", "ok": "boolean", "data": "any", "error": "string" }
+    },
+    "http": {
+      "base": "http://127.0.0.1:8765/v1",
+      "start": "node agent/bridge.mjs",
+      "cmd": "POST /v1/cmd",
+      "state": "GET /v1/state",
+      "alive": "GET /v1/alive"
+    },
+    "mcp": {
+      "command": "node",
+      "args": ["agent/mcp.mjs"]
+    }
+  },
+  "requires": {
+    "browser": "WebGL2 tab must be open for live control and capture",
+    "note": "Static catalog/schema work without a tab. exec/still/video need the GPU tab."
+  }
+}

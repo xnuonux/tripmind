@@ -23,12 +23,40 @@ Direction: from lightly bland to vivid to sacred to quantum to the unnameable. T
 Double-click `Start Tripmind.bat`, or:
 
 ```bash
-python -m http.server 8765
+node agent/bridge.mjs
 ```
 
-then open [http://localhost:8765](http://localhost:8765).
+then open [http://127.0.0.1:8765](http://127.0.0.1:8765). The bridge is the chamber **and** the agent HTTP API. Plain `python -m http.server` still works for humans; agents lose the `/v1` mailbox.
 
 Needs a browser with **WebGL2**. First load wants the font CDN; after that it is just files.
+
+---
+
+## Agents
+
+People play the dock. Agents use the same verbs without a mouse.
+
+| surface | for |
+|---|---|
+| `window.TRIPMIND` | any script in the page. `help()` / `describe()` / `exec(cmd, args)` |
+| `postMessage` | iframes, extensions. `{type:'tripmind', cmd, args, id}` |
+| `POST /v1/cmd` | curl, other processes. requires the bridge + an open tab |
+| `node agent/mcp.mjs` | Claude / Cursor / Grok MCP |
+| `/AGENTS.md` `/llms.txt` `/agent.json` `/agent/catalog.json` | read these. do not guess. |
+
+```js
+await TRIPMIND.describe()
+await TRIPMIND.applyPreset('godhead')
+await TRIPMIND.setState({ intensity: 0.9, heat: 0.75 })
+await TRIPMIND.still({ as: 'dataurl', download: false })
+```
+
+```bash
+curl -s 127.0.0.1:8765/v1/cmd -H "content-type: application/json" \
+  -d '{"cmd":"preset","args":{"id":"hopf-fibration"}}'
+```
+
+The tab is the GPU. You are the hands. Full contract: [`AGENTS.md`](AGENTS.md).
 
 ---
 
@@ -38,7 +66,7 @@ Needs a browser with **WebGL2**. First load wants the font CDN; after that it is
 
 | control | what it actually does |
 |---|---|
-| ← → / name | step the 52 compositions |
+| ← → / name | step the 61 compositions |
 | intensity | how hard the field insists |
 | tempo | the time constant |
 | heat | saturation toward the palette’s fever |
@@ -136,20 +164,18 @@ The theology is not decoration. Sephirot is a graph. Gnosis is a standing wave i
 
 ```
 index.html          the chamber
+AGENTS.md           contract for machines
+llms.txt            short machine brief
+agent.json          discovery
+agent/              catalog, schema, HTTP bridge, MCP
 css/app.css         void, glass, Garamond, mono
+js/api.js           window.TRIPMIND + postMessage
 js/app.js           boot
 js/renderer.js      WebGL2 pipeline
 js/shaders.js       the laws
-js/shapes.js        manifolds
 js/presets.js       the 61
-js/palettes.js      30 cosine palettes
-js/state.js         seed, hash, easy params
-js/ui.js            easy / deep / gallery / capture
-js/audio.js         mic + file
-js/capture.js       stills + MediaRecorder
-js/gl.js            WebGL2 helpers
 studio/             ancestral sources, not the product
-Start Tripmind.bat  Windows launcher
+Start Tripmind.bat  chamber + bridge
 ```
 
 MIT. Built as a static site. No build step. No framework.

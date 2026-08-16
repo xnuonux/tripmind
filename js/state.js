@@ -52,16 +52,21 @@ export function cloneState(s) {
 
 export function makeState() {
   const fromUrl = parseHash();
+  let s;
   if (fromUrl?.preset) {
     const p = presetById(fromUrl.preset);
-    if (p) return applyPreset(cloneState(DEFAULTS), p, fromUrl);
+    if (p) s = applyPreset(cloneState(DEFAULTS), p, fromUrl);
   }
-  const first = PRESETS[0];
-  const s = applyPreset(cloneState(DEFAULTS), first, fromUrl || {});
-  try {
-    const saved = JSON.parse(localStorage.getItem('tripmind:last') || 'null');
-    if (saved && saved.seed) return { ...s, ...saved, ...fromUrl };
-  } catch {}
+  if (!s) {
+    s = applyPreset(cloneState(DEFAULTS), PRESETS[0], fromUrl || {});
+  }
+  if (!fromUrl?.preset && !fromUrl?.seed) {
+    try {
+      const saved = JSON.parse(localStorage.getItem('tripmind:last') || 'null');
+      if (saved && saved.seed) s = { ...s, ...saved };
+    } catch {}
+  }
+  if (fromUrl) s = { ...s, ...fromUrl };
   return s;
 }
 
@@ -72,12 +77,46 @@ export function applyPreset(state, preset, overrides = {}) {
     preset: preset.id,
     seed: overrides.seed || preset.seed || state.seed,
   };
-  if (typeof overrides.intensity === 'number') next.intensity = overrides.intensity;
-  if (typeof overrides.tempo === 'number') next.tempo = overrides.tempo;
-  if (typeof overrides.heat === 'number') next.heat = overrides.heat;
-  if (typeof overrides.bloom === 'number') next.bloom = overrides.bloom;
+  for (const [k, v] of Object.entries(overrides)) {
+    if (k === 'preset' || v === undefined) continue;
+    next[k] = v;
+  }
   return next;
 }
+
+export const STATE_FIELDS = {
+  engine:        { type: 'enum',   values: ENGINES, meaning: 'primary renderer / theorem' },
+  engineB:       { type: 'enum',   values: ENGINES, meaning: 'secondary engine for hybrid / mix' },
+  seed:          { type: 'hex',    length: 8, meaning: 'deterministic world seed' },
+  preset:        { type: 'string', meaning: 'composition id' },
+  intensity:     { type: 'number', min: 0, max: 1, meaning: 'how hard the field insists' },
+  tempo:         { type: 'number', min: 0, max: 1, meaning: 'time constant' },
+  heat:          { type: 'number', min: 0, max: 1, meaning: 'saturation / fever' },
+  bloom:         { type: 'number', min: 0, max: 1, meaning: 'HDR halo on hot parts' },
+  kaleid:        { type: 'number', min: 0, max: 1, meaning: 'dihedral fold mix' },
+  segments:      { type: 'int',    min: 2, max: 32, meaning: 'kaleidoscope fold count D_n' },
+  warpAmt:       { type: 'number', min: 0, max: 1, meaning: 'domain-warp amplitude' },
+  noise:         { type: 'number', min: 0, max: 1, meaning: 'noise / curl amount' },
+  trail:         { type: 'number', min: 0, max: 0.97, meaning: 'video-feedback persistence' },
+  grain:         { type: 'number', min: 0, max: 0.4, meaning: 'IGN film grain' },
+  ca:            { type: 'number', min: 0, max: 1, meaning: 'radial chromatic aberration' },
+  crt:           { type: 'number', min: 0, max: 1, meaning: 'CRT curvature + aperture grille' },
+  palette:       { type: 'int',    min: 0, max: 29, meaning: 'IQ cosine palette index' },
+  paletteShift:  { type: 'number', min: 0, max: 1, meaning: 'phase along the palette' },
+  contrast:      { type: 'number', min: 0.5, max: 2, meaning: 'grade contrast' },
+  exposure:      { type: 'number', min: 0.4, max: 2, meaning: 'grade exposure' },
+  fov:           { type: 'number', min: 0.6, max: 2, meaning: 'field of view / zoom feel' },
+  shape:         { type: 'enum',   values: SHAPES, meaning: 'particle manifold (field engine)' },
+  particles:     { type: 'int',    min: 0, max: 3, meaning: 'particle count level 16k–102k' },
+  spring:        { type: 'number', min: 0, max: 3, meaning: 'spring-to-home stiffness' },
+  damping:       { type: 'number', min: 0.5, max: 0.995, meaning: 'velocity keep' },
+  orbit:         { type: 'number', min: 0, max: 1, meaning: 'shared angular momentum' },
+  morph:         { type: 'number', min: 0, max: 1, meaning: 'shape-morph amount (field)' },
+  mix:           { type: 'number', min: 0, max: 1, meaning: 'hybrid mix toward engineB' },
+  audioOn:       { type: 'bool',   meaning: 'audio reactivity armed' },
+  audioAmt:      { type: 'number', min: 0, max: 2, meaning: 'audio modulation depth' },
+  autoRotate:    { type: 'bool',   meaning: 'camera / field auto-rotate' },
+};
 
 export function persist(state) {
   const slim = {
@@ -99,21 +138,70 @@ export function writeHash(state) {
   q.set('p', state.preset);
   q.set('s', state.seed);
   q.set('e', state.engine);
+  q.set('i', num(state.intensity));
+  q.set('t', num(state.tempo));
+  q.set('h', num(state.heat));
+  q.set('b', num(state.bloom));
   const hash = q.toString();
   if (location.hash.slice(1) !== hash) {
-    history.replaceState(null, '', '#' + hash);
+    history.replaceState(null, '', location.pathname + location.search + '#' + hash);
   }
 }
 
+function num(v) {
+  return String(Math.round((+v || 0) * 1000) / 1000);
+}
+
 export function parseHash() {
+  const fromSearch = location.search ? new URLSearchParams(location.search) : null;
   const raw = location.hash.replace(/^#/, '').trim();
-  if (!raw) return null;
-  const q = new URLSearchParams(raw);
+  const q = raw ? new URLSearchParams(raw) : (fromSearch || new URLSearchParams());
+  if (fromSearch) {
+    for (const [k, v] of fromSearch) if (!q.has(k)) q.set(k, v);
+  }
+  if (![...q.keys()].length) return null;
+
+  if (q.get('state')) {
+    try { return decodeStatePayload(q.get('state')); } catch { /* fall through */ }
+  }
+
   const out = {};
   if (q.get('p')) out.preset = q.get('p');
   if (q.get('s')) out.seed = q.get('s');
   if (q.get('e')) out.engine = q.get('e');
+  if (q.get('eb')) out.engineB = q.get('eb');
+  const floats = { i: 'intensity', t: 'tempo', h: 'heat', b: 'bloom', k: 'kaleid', w: 'warpAmt' };
+  for (const [k, name] of Object.entries(floats)) {
+    if (q.has(k)) out[name] = clamp(+q.get(k), 0, 1);
+  }
   return out;
+}
+
+export function encodeStatePayload(state) {
+  const json = JSON.stringify(state);
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+export function decodeStatePayload(payload) {
+  let b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  return JSON.parse(decodeURIComponent(escape(atob(b64))));
+}
+
+export function shareURL(state, { full = false } = {}) {
+  const u = new URL(location.href);
+  if (full) {
+    u.hash = 'state=' + encodeStatePayload(state);
+  } else {
+    u.hash = `p=${state.preset}&s=${state.seed}&e=${state.engine}&i=${num(state.intensity)}&t=${num(state.tempo)}&h=${num(state.heat)}&b=${num(state.bloom)}`;
+  }
+  return u.toString();
+}
+
+function clamp(v, a, b) {
+  if (!Number.isFinite(v)) return a;
+  return Math.max(a, Math.min(b, v));
 }
 
 export function randomSeed(rng = Math.random) {
