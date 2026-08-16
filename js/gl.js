@@ -1,10 +1,10 @@
-export function createGL(canvas) {
+export function createGL(canvas, power = 'full') {
   const gl = canvas.getContext('webgl2', {
     antialias: false,
     alpha: false,
     premultipliedAlpha: false,
     preserveDrawingBuffer: true,
-    powerPreference: 'high-performance',
+    powerPreference: power === 'low' ? 'low-power' : 'high-performance',
   });
   if (!gl) throw new Error('WebGL2 is required for TRIPMIND.');
   gl.getExtension('EXT_color_buffer_float');

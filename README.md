@@ -30,6 +30,16 @@ then open [http://127.0.0.1:8765](http://127.0.0.1:8765). The bridge is the cham
 
 Needs a browser with **WebGL2**. First load wants the font CDN; after that it is just files.
 
+### Slow laptop / it won't start
+
+Intel iGPUs choke on the full shader. The chamber now **guesses** (Intel / ≤4 cores / ≤4 GB → low power) and can also be forced:
+
+- button **low power** in the chrome (or press `L`)
+- [github.com/xnuonux/tripmind](https://xnuonux.github.io/tripmind/?lite=1) — add `?lite=1`
+- `TRIPMIND.exec('power', { mode: 'low' })`
+
+Low power: cheap scene shader, no GPGPU particles, no bloom stack, pixel ratio capped at 1. Presets still work. Click **full gpu** when you want the heavy theorems.
+
 ---
 
 ## Agents

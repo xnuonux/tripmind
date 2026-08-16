@@ -53,6 +53,11 @@ export function bindUI(ctx) {
     $('d-rotate').checked = !!s.autoRotate;
     const dur = $('r-dur');
     if (dur && $('r-dur-v')) $('r-dur-v').textContent = dur.value + 's';
+    const pwr = $('power-btn');
+    if (pwr) {
+      pwr.classList.toggle('on', renderer.power === 'low');
+      pwr.textContent = renderer.power === 'low' ? 'low power' : 'full gpu';
+    }
     persist(s);
     paintGallery(s);
   }
@@ -185,6 +190,11 @@ export function bindUI(ctx) {
     $('r-dur-v').textContent = $('r-dur').value + 's';
   });
 
+  $('power-btn')?.addEventListener('click', () => {
+    const next = renderer.power === 'low' ? 'full' : 'low';
+    window.__tripmindApplyPower?.(next);
+  });
+
   $('fs-btn').onclick = () => {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
     else document.exitFullscreen?.();
@@ -287,6 +297,7 @@ export function bindUI(ctx) {
     if (k === 's' && !e.metaKey && !e.ctrlKey) $('still-btn').click();
     if (k === 'r' && !e.metaKey && !e.ctrlKey) $('clip8').click();
     if (k === 'n') $('rand').click();
+    if (k === 'l') $('power-btn')?.click();
     if (k === 'escape') {
       closeGallery();
       if (deep) { deep = false; paint(); }

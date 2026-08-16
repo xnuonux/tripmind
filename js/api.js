@@ -55,6 +55,8 @@ export const COMMANDS = [
   { cmd: 'show',      args: {},                         returns: '{ui:true}' },
   { cmd: 'deep',      args: { on: true },               returns: '{deep}', about: 'open/close the observatory.' },
   { cmd: 'gallery',   args: { on: true },               returns: '{gallery}' },
+  { cmd: 'power',     args: { mode: 'low|full' },       returns: '{power}',
+    about: 'low = iGPU / laptop. full = every theorem. persists.' },
   { cmd: 'url',       args: { full: false },            returns: '{url}', about: 'shareable URL of the current look.' },
   { cmd: 'save',      args: { name: 'optional' },       returns: 'look', about: 'bookmark current look to localStorage.' },
   { cmd: 'looks',     args: {},                         returns: 'saved looks' },
@@ -289,6 +291,14 @@ export function attachAPI({ get, set, renderer, ui }) {
       case 'easy':
         ui.setDeep?.(false);
         return { deep: false };
+      case 'power':
+      case 'lite': {
+        const mode = String(a.mode || a.power || (a.low === false ? 'full' : 'low'));
+        const next = window.__tripmindApplyPower
+          ? window.__tripmindApplyPower(mode === 'full' || mode === 'high' ? 'full' : 'low')
+          : renderer.setPower(mode);
+        return { power: next };
+      }
       case 'gallery': {
         const el = document.getElementById('gallery');
         const on = a.on == null ? !el.classList.contains('open') : !!a.on;

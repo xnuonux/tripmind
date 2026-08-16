@@ -14,7 +14,14 @@
 <canvas id="c"></canvas>
 <div id="fatal" hidden></div>
 
-<div id="splash"><div class="t">tripmind</div></div>
+<div id="splash">
+  <div class="t">tripmind</div>
+  <div id="boot-msg">opening the chamber</div>
+</div>
+<div id="boot-hint" hidden>
+  still compiling. if this hangs,
+  <a href="?lite=1">open in low power</a>
+</div>
 <div id="agent-dot">agent</div>
 
 <div class="hud hud-tl">
@@ -33,6 +40,7 @@
     <button id="mode-deep">deep</button>
   </div>
   <button class="ghost" id="gallery-btn">presets</button>
+  <button class="ghost" id="power-btn" title="low power for slow machines">low power</button>
   <button class="ghost" id="hide-btn" title="hide ui (H)">hide</button>
   <button class="ghost" id="fs-btn">full</button>
 </div>
@@ -166,6 +174,14 @@
   </div>
 </div>
 
+<script>
+  setTimeout(function () {
+    if (!document.body.classList.contains('awake')) {
+      var h = document.getElementById('boot-hint');
+      if (h) h.hidden = false;
+    }
+  }, 4000);
+</script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

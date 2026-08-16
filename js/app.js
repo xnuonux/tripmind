@@ -4,9 +4,31 @@ import { sampleAudio } from './audio.js';
 import { bindUI } from './ui.js';
 import { attachAPI } from './api.js';
 import { startBridgeClient } from './bridge-client.js';
+import { guessPower, dprFor, savePower } from './power.js';
 
 const canvas = document.getElementById('c');
-const renderer = new Renderer(canvas);
+const fatalEl = document.getElementById('fatal');
+function showFatal(err) {
+  if (!fatalEl) return;
+  if (!err) { fatalEl.hidden = true; fatalEl.textContent = ''; return; }
+  fatalEl.hidden = false;
+  fatalEl.textContent = String(err.message || err);
+}
+
+const power0 = guessPower();
+let renderer;
+try {
+  renderer = new Renderer(canvas, { power: power0 });
+} catch (err) {
+  console.error(err);
+  try {
+    renderer = new Renderer(canvas, { power: 'low' });
+    savePower('low');
+  } catch (err2) {
+    showFatal(err2);
+    throw err2;
+  }
+}
 
 let state = makeState();
 const get = () => state;
@@ -17,11 +39,19 @@ const api = attachAPI({ get, set, renderer, ui });
 startBridgeClient(api);
 
 function fit() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
-  renderer.resize(window.innerWidth, window.innerHeight, dpr);
+  renderer.resize(window.innerWidth, window.innerHeight, dprFor(renderer.power));
 }
 fit();
 window.addEventListener('resize', fit);
+
+export function applyPower(mode) {
+  const next = renderer.setPower(mode);
+  savePower(next);
+  fit();
+  ui.paint();
+  return next;
+}
+if (typeof window !== 'undefined') window.__tripmindApplyPower = applyPower;
 
 // orbit
 let drag = null;
@@ -46,10 +76,10 @@ canvas.addEventListener('wheel', (e) => {
 // two-finger / pinch zoom is handled by wheel on trackpads
 
 renderer.setSeed(state.seed);
-renderer.rebuildParticles(state);
 
 const hudFps = document.getElementById('hud-fps');
 let last = performance.now();
+let booted = false;
 
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
@@ -57,18 +87,33 @@ function loop(now) {
   const audio = sampleAudio();
   try {
     renderer.frame(dt, state, audio);
+    if (!booted) {
+      booted = true;
+      document.body.classList.add('awake');
+      const hint = document.getElementById('boot-hint');
+      if (hint) hint.hidden = true;
+    }
   } catch (err) {
     console.error(err);
-    document.getElementById('fatal').textContent = err.message || String(err);
-    document.getElementById('fatal').hidden = false;
-    return;
+    showFatal(err);
+    if (renderer.power !== 'low') {
+      try {
+        applyPower('low');
+        showFatal(null);
+      } catch (e2) {
+        showFatal(e2);
+        return;
+      }
+    } else {
+      return;
+    }
   }
-  if (hudFps) hudFps.textContent = renderer.fps ? renderer.fps.toFixed(0) : '–';
+  if (hudFps) {
+    const tag = renderer.power === 'low' ? ' · low' : '';
+    hudFps.textContent = (renderer.fps ? renderer.fps.toFixed(0) : '–') + tag;
+  }
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-
-// fade the title splash
-requestAnimationFrame(() => document.body.classList.add('awake'));
 
 // window.TRIPMIND is owned by attachAPI

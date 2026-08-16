@@ -88,3 +88,5 @@ Humans and agents can deep-link:
 - Do not claim a render finished if `still` / `video` returned an error.
 
 If the bridge says no tab is connected: tell the human to open `http://127.0.0.1:8765/` and retry.
+
+If the chamber never leaves the splash (common on Intel laptops): `exec('power', { mode: 'low' })` or open with `?lite=1`. Do not keep retrying full gpu.

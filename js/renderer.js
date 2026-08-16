@@ -6,6 +6,7 @@ import {
   QUAD_VS, SCENE_FS, FEEDBACK_FS, BLUR_FS, COMPOSITE_FS,
   RD_FS, RD_SEED_FS, POS_FS, VEL_FS, PARTICLE_VS, PARTICLE_FS,
 } from './shaders.js';
+import { SCENE_LITE_FS } from './shaders-lite.js';
 import { PALETTES } from './palettes.js';
 import { ENGINES } from './state.js';
 import { buildHomes, buildHomesNearby, texSizeForLevel } from './shapes.js';
@@ -39,23 +40,22 @@ function uploadRGBA32(gl, tex, n, data) {
 }
 
 export class Renderer {
-  constructor(canvas) {
+  constructor(canvas, opts = {}) {
     this.canvas = canvas;
-    this.gl = createGL(canvas);
+    this.power = opts.power === 'full' ? 'full' : 'low';
+    this.gl = createGL(canvas, this.power);
     const gl = this.gl;
     this.quad = createQuad(gl);
+    this.prog = {};
+    this.failed = {};
 
-    this.prog = {
-      scene: program(gl, QUAD_VS, SCENE_FS),
-      feedback: program(gl, QUAD_VS, FEEDBACK_FS),
-      blur: program(gl, QUAD_VS, BLUR_FS),
-      composite: program(gl, QUAD_VS, COMPOSITE_FS),
-      rd: program(gl, QUAD_VS, RD_FS),
-      rdSeed: program(gl, QUAD_VS, RD_SEED_FS),
-      pos: program(gl, QUAD_VS, POS_FS),
-      vel: program(gl, QUAD_VS, VEL_FS),
-      particle: program(gl, PARTICLE_VS, PARTICLE_FS),
-    };
+    // First paint: only the cheap scene + composite. Heavy programs wait.
+    this.ensure('scene');
+    this.ensure('composite');
+    if (this.power === 'full') {
+      this.ensure('feedback');
+      this.ensure('blur');
+    }
 
     this.w = 0;
     this.h = 0;
@@ -71,9 +71,9 @@ export class Renderer {
     this.bloomB = null;
     this.fbFlip = false;
 
-    this.rdN = 384;
-    this.rdA = tryTarget(gl, this.rdN, this.rdN, true);
-    this.rdB = tryTarget(gl, this.rdN, this.rdN, true);
+    this.rdN = this.power === 'low' ? 192 : 384;
+    this.rdA = null;
+    this.rdB = null;
     this.rdFlip = false;
     this.rdReady = false;
 
@@ -97,6 +97,67 @@ export class Renderer {
     });
 
     this.particleVAO = gl.createVertexArray();
+    this.liteScene = this.power === 'low';
+  }
+
+  ensure(name) {
+    if (this.prog[name]) return this.prog[name];
+    if (this.failed[name]) return null;
+    const gl = this.gl;
+    try {
+      if (name === 'scene') {
+        const src = this.power === 'low' ? SCENE_LITE_FS : SCENE_FS;
+        try {
+          this.prog.scene = program(gl, QUAD_VS, src);
+          this.liteScene = this.power === 'low';
+        } catch (err) {
+          if (this.power !== 'low') {
+            console.warn('full scene shader failed, falling back to lite', err);
+            this.prog.scene = program(gl, QUAD_VS, SCENE_LITE_FS);
+            this.liteScene = true;
+            this.power = 'low';
+          } else {
+            throw err;
+          }
+        }
+        return this.prog.scene;
+      }
+      const map = {
+        feedback: [QUAD_VS, FEEDBACK_FS],
+        blur: [QUAD_VS, BLUR_FS],
+        composite: [QUAD_VS, COMPOSITE_FS],
+        rd: [QUAD_VS, RD_FS],
+        rdSeed: [QUAD_VS, RD_SEED_FS],
+        pos: [QUAD_VS, POS_FS],
+        vel: [QUAD_VS, VEL_FS],
+        particle: [PARTICLE_VS, PARTICLE_FS],
+      };
+      const pair = map[name];
+      if (!pair) return null;
+      this.prog[name] = program(gl, pair[0], pair[1]);
+      return this.prog[name];
+    } catch (err) {
+      console.warn('shader', name, 'failed', err);
+      this.failed[name] = String(err.message || err);
+      return null;
+    }
+  }
+
+  setPower(mode) {
+    const next = mode === 'full' ? 'full' : 'low';
+    if (next === this.power && this.prog.scene) return this.power;
+    this.power = next;
+    if (this.prog.scene) {
+      this.gl.deleteProgram(this.prog.scene.p);
+      this.prog.scene = null;
+    }
+    this.failed.scene = null;
+    this.ensure('scene');
+    if (next === 'full') {
+      this.ensure('feedback');
+      this.ensure('blur');
+    }
+    return this.power;
   }
 
   resize(cssW, cssH, dpr) {
@@ -110,12 +171,14 @@ export class Renderer {
     this.canvas.width = w;
     this.canvas.height = h;
     const hdr = { prefer: true };
-    this.scene = this.scene ? resizeTarget(gl, this.scene, w, h) : tryTarget(gl, w, h, true);
-    this.feedbackA = this.feedbackA ? resizeTarget(gl, this.feedbackA, w, h) : tryTarget(gl, w, h, true);
-    this.feedbackB = this.feedbackB ? resizeTarget(gl, this.feedbackB, w, h) : tryTarget(gl, w, h, true);
-    const bw = Math.max(2, w >> 1), bh = Math.max(2, h >> 1);
-    this.bloomA = this.bloomA ? resizeTarget(gl, this.bloomA, bw, bh) : tryTarget(gl, bw, bh, true);
-    this.bloomB = this.bloomB ? resizeTarget(gl, this.bloomB, bw, bh) : tryTarget(gl, bw, bh, true);
+    this.scene = this.scene ? resizeTarget(gl, this.scene, w, h) : tryTarget(gl, w, h, this.power === 'full');
+    if (this.power === 'full') {
+      this.feedbackA = this.feedbackA ? resizeTarget(gl, this.feedbackA, w, h) : tryTarget(gl, w, h, true);
+      this.feedbackB = this.feedbackB ? resizeTarget(gl, this.feedbackB, w, h) : tryTarget(gl, w, h, true);
+      const bw = Math.max(2, w >> 1), bh = Math.max(2, h >> 1);
+      this.bloomA = this.bloomA ? resizeTarget(gl, this.bloomA, bw, bh) : tryTarget(gl, bw, bh, true);
+      this.bloomB = this.bloomB ? resizeTarget(gl, this.bloomB, bw, bh) : tryTarget(gl, bw, bh, true);
+    }
     void hdr;
   }
 
@@ -135,6 +198,8 @@ export class Renderer {
 
   rebuildParticles(state) {
     if (!state) return;
+    if (this.power === 'low') return;
+    if (!this.ensure('vel') || !this.ensure('pos') || !this.ensure('particle')) return;
     const gl = this.gl;
     const n = texSizeForLevel(state.particles);
     const count = n * n;
@@ -148,17 +213,23 @@ export class Renderer {
           if (t?.tex) { gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fbo); }
         }
       }
-      this.particles = {
-        n,
-        count,
-        posA: floatTarget(gl, n),
-        posB: floatTarget(gl, n),
-        velA: floatTarget(gl, n),
-        velB: floatTarget(gl, n),
-        homeA: floatTarget(gl, n),
-        homeB: floatTarget(gl, n),
-        flip: false,
-      };
+      try {
+        this.particles = {
+          n,
+          count,
+          posA: floatTarget(gl, n),
+          posB: floatTarget(gl, n),
+          velA: floatTarget(gl, n),
+          velB: floatTarget(gl, n),
+          homeA: floatTarget(gl, n),
+          homeB: floatTarget(gl, n),
+          flip: false,
+        };
+      } catch (err) {
+        console.warn('particle buffers unavailable', err);
+        this.particles = null;
+        return;
+      }
     }
     uploadRGBA32(gl, this.particles.homeA.tex, n, homes.data);
     uploadRGBA32(gl, this.particles.homeB.tex, n, homesB.data);
@@ -176,6 +247,12 @@ export class Renderer {
   }
 
   seedRD() {
+    if (this.power === 'low') return;
+    if (!this.ensure('rd') || !this.ensure('rdSeed')) return;
+    if (!this.rdA) {
+      this.rdA = tryTarget(this.gl, this.rdN, this.rdN, true);
+      this.rdB = tryTarget(this.gl, this.rdN, this.rdN, true);
+    }
     const gl = this.gl;
     const seed = cyrb128(this.seed)[0] / 4294967296;
     blit(gl, this.quad, this.prog.rdSeed, this.rdA.fbo, this.rdN, this.rdN, (u) => {
@@ -339,15 +416,17 @@ export class Renderer {
 
     if (state.seed !== this.seed) {
       this.setSeed(state.seed);
-      this.rebuildParticles(state);
+      if (this.power === 'full' && state.engine === 'field') this.rebuildParticles(state);
     }
-    if (!this.particles) this.rebuildParticles(state);
 
-    if (state.engine === 'soliton' || state.engineB === 'soliton' || state.engine === 'hybrid') {
+    const wantRD = this.power === 'full' && (state.engine === 'soliton' || state.engineB === 'soliton');
+    if (wantRD) {
       if (!this.rdReady) this.seedRD();
+    }
+    if (wantRD && this.rdA) {
       const src = this.rdFlip ? this.rdB : this.rdA;
       const dst = this.rdFlip ? this.rdA : this.rdB;
-      const steps = this.paused ? 0 : 2;
+      const steps = this.paused ? 0 : 1;
       let curS = src, curD = dst;
       for (let i = 0; i < steps; i++) {
         blit(gl, this.quad, this.prog.rd, curD.fbo, this.rdN, this.rdN, (u) => {
@@ -363,49 +442,64 @@ export class Renderer {
       }
     }
 
-    if (state.engine === 'field') this.stepParticles(state, this.paused ? 0 : dt, audio);
+    if (this.power === 'full' && state.engine === 'field') {
+      if (!this.particles) this.rebuildParticles(state);
+      this.stepParticles(state, this.paused ? 0 : dt, audio);
+    }
 
-    const rdTex = this.rdFlip ? this.rdA.tex : this.rdB.tex;
+    const rdTex = this.rdA ? (this.rdFlip ? this.rdA.tex : this.rdB.tex) : this.emptyTex;
+    const sceneProg = this.ensure('scene');
+    const compProg = this.ensure('composite');
+    if (!sceneProg || !compProg || !this.scene) return;
 
-    blit(gl, this.quad, this.prog.scene, this.scene.fbo, this.w, this.h, (u) => {
+    blit(gl, this.quad, sceneProg, this.scene.fbo, this.w, this.h, (u) => {
       this.bindCommon(u, state, audio);
-      bindTex(gl, 0, rdTex || this.emptyTex);
+      bindTex(gl, 0, rdTex);
       gl.uniform1i(u.uRD, 0);
     });
 
-    this.drawParticles(state);
+    if (this.power === 'full') this.drawParticles(state);
 
-    const prev = this.fbFlip ? this.feedbackB : this.feedbackA;
-    const next = this.fbFlip ? this.feedbackA : this.feedbackB;
-    blit(gl, this.quad, this.prog.feedback, next.fbo, this.w, this.h, (u) => {
-      bindTex(gl, 0, this.scene.tex); gl.uniform1i(u.uScene, 0);
-      bindTex(gl, 1, prev.tex); gl.uniform1i(u.uPrev, 1);
-      gl.uniform1f(u.uTrail, state.trail);
-    });
-    this.fbFlip = !this.fbFlip;
+    let shown = this.scene;
+    const fbProg = this.power === 'full' ? this.ensure('feedback') : null;
+    if (fbProg && this.feedbackA && this.feedbackB) {
+      const prev = this.fbFlip ? this.feedbackB : this.feedbackA;
+      const next = this.fbFlip ? this.feedbackA : this.feedbackB;
+      blit(gl, this.quad, fbProg, next.fbo, this.w, this.h, (u) => {
+        bindTex(gl, 0, this.scene.tex); gl.uniform1i(u.uScene, 0);
+        bindTex(gl, 1, prev.tex); gl.uniform1i(u.uPrev, 1);
+        gl.uniform1f(u.uTrail, state.trail);
+      });
+      this.fbFlip = !this.fbFlip;
+      shown = this.fbFlip ? this.feedbackA : this.feedbackB;
+    }
 
-    const fb = this.fbFlip ? this.feedbackA : this.feedbackB;
-    const bw = this.bloomA.w, bh = this.bloomA.h;
-    blit(gl, this.quad, this.prog.blur, this.bloomA.fbo, bw, bh, (u) => {
-      bindTex(gl, 0, fb.tex); gl.uniform1i(u.uScene, 0);
-      gl.uniform2f(u.uDir, 1.4, 0);
-      gl.uniform2f(u.uRes, bw, bh);
-    });
-    blit(gl, this.quad, this.prog.blur, this.bloomB.fbo, bw, bh, (u) => {
-      bindTex(gl, 0, this.bloomA.tex); gl.uniform1i(u.uScene, 0);
-      gl.uniform2f(u.uDir, 0, 1.4);
-      gl.uniform2f(u.uRes, bw, bh);
-    });
+    let bloomTex = this.emptyTex;
+    const blurProg = this.power === 'full' ? this.ensure('blur') : null;
+    if (blurProg && this.bloomA && this.bloomB) {
+      const bw = this.bloomA.w, bh = this.bloomA.h;
+      blit(gl, this.quad, blurProg, this.bloomA.fbo, bw, bh, (u) => {
+        bindTex(gl, 0, shown.tex); gl.uniform1i(u.uScene, 0);
+        gl.uniform2f(u.uDir, 1.4, 0);
+        gl.uniform2f(u.uRes, bw, bh);
+      });
+      blit(gl, this.quad, blurProg, this.bloomB.fbo, bw, bh, (u) => {
+        bindTex(gl, 0, this.bloomA.tex); gl.uniform1i(u.uScene, 0);
+        gl.uniform2f(u.uDir, 0, 1.4);
+        gl.uniform2f(u.uRes, bw, bh);
+      });
+      bloomTex = this.bloomB.tex;
+    }
 
-    blit(gl, this.quad, this.prog.composite, null, this.w, this.h, (u) => {
-      bindTex(gl, 0, fb.tex); gl.uniform1i(u.uScene, 0);
-      bindTex(gl, 1, this.bloomB.tex); gl.uniform1i(u.uBloom, 1);
+    blit(gl, this.quad, compProg, null, this.w, this.h, (u) => {
+      bindTex(gl, 0, shown.tex); gl.uniform1i(u.uScene, 0);
+      bindTex(gl, 1, bloomTex); gl.uniform1i(u.uBloom, 1);
       gl.uniform2f(u.uRes, this.w, this.h);
       gl.uniform1f(u.uTime, this.time);
-      gl.uniform1f(u.uBloomAmt, state.bloom * 1.15);
-      gl.uniform1f(u.uGrain, state.grain);
-      gl.uniform1f(u.uCA, state.ca);
-      gl.uniform1f(u.uCRT, state.crt);
+      gl.uniform1f(u.uBloomAmt, this.power === 'low' ? state.bloom * 0.25 : state.bloom * 1.15);
+      gl.uniform1f(u.uGrain, this.power === 'low' ? state.grain * 0.5 : state.grain);
+      gl.uniform1f(u.uCA, this.power === 'low' ? state.ca * 0.4 : state.ca);
+      gl.uniform1f(u.uCRT, this.power === 'low' ? 0 : state.crt);
       gl.uniform1f(u.uExposure, 1.0);
     });
 
